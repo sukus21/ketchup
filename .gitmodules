@@ -1,0 +1,3 @@
+[submodule "source/hardware.inc"]
+	path = source/hardware.inc
+	url = https://github.com/gbdev/hardware.inc
