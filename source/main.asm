@@ -200,7 +200,7 @@ Main::
     ldh [rLCDC], a
     
     ; Go to gameloop
-    jp GameloopTest
+    jp GameloopBattle
 ;
 
 
