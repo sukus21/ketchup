@@ -53,6 +53,18 @@ MACRO color_t
     dw ((\3) << 10) + ((\2) << 5) + (\1)
 ENDM
 
+; Color macro, useful for defining palettes.
+; Expands to a single `dw` command.
+; Colors are specified with 8-bit depth, for simplicity.
+; 
+; Input:
+; - 1: Red (0-255)
+; - 2: Green (0-255)
+; - 3: Blue (0-255)
+MACRO color_rgb8
+    color_t (\1 >> 3), (\2 >> 3), (\3 >> 3)
+ENDM
+
 ; The color that closest matches DMG black.
 MACRO color_dmg_blk
     color_t 0, 0, 0
