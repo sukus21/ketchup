@@ -191,7 +191,9 @@ Main::
     ld [wInput], a
 
     ; Do my intro with the logo
-    farcall Intro
+    IF !CONFIG_DEV
+        farcall Intro
+    ENDC
 
     ; Enable LCD with a few flags
     ld a, LCDCF_ON | LCDCF_BLK21 | LCDCF_BGON | LCDCF_WINON
