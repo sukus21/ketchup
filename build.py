@@ -158,7 +158,7 @@ def build():
 
     # Fix ROM header using rgbfix
     print("\nRGBFIX step...")
-    args = ["rgbfix", "-v", "-j", "-c", "-p", "255", "-t", "SUKKORE", "-m", "MBC1", output+".gb"]
+    args = ["rgbfix", "-v", "-j", "-C", "-p", "255", "-t", "SUKKORE", "-m", "MBC1", output+".gb"]
     print(" ".join(escapeCli(args)))
     result = cmd.run(args, stdout=sys.stdout, stderr=sys.stderr)
     if result.returncode != 0:
