@@ -45,6 +45,50 @@ SECTION "GAMELOOP BATTLE DATA", ROMX
         ld a, VTI_BATTLE_CELLS_PLAYER
         call GameloopBattleInitCellHelper
 
+        ; Set some stuff up for debugging the window
+        xor a
+        ldh [rVBK], a
+        ld hl, _SCRN0
+        ld e, l
+        ld b, VTI_BATTLE_CELLS_ENEMY + 3
+        ld c, 32
+        .windowLoop
+            ld [hl], b
+            inc l
+            ld a, VTI_BATTLE_CELLS_ENEMY + 4
+            REPT 6
+                ld [hl+], a
+            ENDR
+
+            ld a, e
+            add a, 32
+            ld l, a
+            ld e, a
+            jr nc, @+3 :: inc h
+            
+            dec c
+            jr nz, .windowLoop
+        ;
+
+        ; Set window attributes
+        ld a, 1
+        ldh [rVBK], a
+        ld d, 32
+        ld hl, _SCRN0
+        .windowAttrLoop
+            ld a, PAL_BATTLE_MENU_DEFAULT
+            REPT 9
+                ld [hl+], a
+            ENDR
+            ld a, l
+            add a, 32 - 9
+            ld l, a
+            jr nc, @+3 :: inc h
+            
+            dec d
+            jr nz, .windowAttrLoop
+        ;
+
         ; Lastly, transfer palettes
         ld hl, PaletteArena
         xor a
@@ -58,7 +102,7 @@ SECTION "GAMELOOP BATTLE DATA", ROMX
         ldh [rSCX], a
         ld a, VMI_BATTLE_BASE_Y0*8
         ldh [rSCY], a
-        ld a, LCDCF_BG8800 | LCDCF_BGON | LCDCF_ON
+        ld a, LCDCF_BLK21 | LCDCF_BGON | LCDCF_ON | LCDCF_WINON | LCDCF_WIN9800 | LCDCF_BG9800
         ldh [rLCDC], a
 
         ; Yeah, we are done here
