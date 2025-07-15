@@ -231,8 +231,8 @@ PaletteSetOBP1::
 ; - `a`: Palette index * 8
 ;
 ; Returns:
-; - `hl`: `$0010`
-; - `a`: `$08`
+; - `hl`: Palette address + `$0010`
+; - `a`: Palette index + `$08`
 ;
 ; Destroys: `bc`
 ; Saves: `de`
@@ -269,7 +269,7 @@ PaletteCopyBG::
 ; - `a`: Palette index * 8
 ;
 ; Returns:
-; - `hl`: Palette address + `$10`
+; - `hl`: Palette address + `$0010`
 ; - `a`: Palette index + `$08`
 ;
 ; Destroys: `bc`
