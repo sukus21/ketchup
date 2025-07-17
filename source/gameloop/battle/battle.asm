@@ -2,6 +2,7 @@ INCLUDE "hardware.inc/hardware.inc"
 INCLUDE "vqueue/vqueue.inc"
 INCLUDE "macro/lyc.inc"
 INCLUDE "gameloop/battle/battle.inc"
+INCLUDE "macro/farcall.inc"
 
 
 SECTION "GAMELOOP BATTLE", ROMX
@@ -21,72 +22,20 @@ GameloopBattle::
 
     ; Transfer the required assets to VRAM
     vqueue_enqueue GameloopBattleInitTransfer
-    call GameloopLoading
+    farcall_x GameloopLoading
 
     ; Do initial VBlank
     call WaitVBlank
-    call GameloopBattleVBlank
+    farcall_x GameloopBattleVBlank
 
     ; Endless loop for now
     .loop
         ; Do things on the CPU
         call ReadInput
-        ld hl, wBattleMenuX
+        call UpdateWindowTarget
+        call MoveWindow
 
-        ; Read battle menu X -> D
-        ld a, [hl+]
-        ld d, a
-        ld a, BATTLE_WINDOW_X_OPEN
-        bit PADB_A, b
-        jr z, :+
-            ; have to add 10 or interpolation looks weird...
-            ; Clamp result after interpolation
-            ld a, BATTLE_WINDOW_X_CLOSED + 10
-        :
-        ld [hl-], a
 
-        ; Find difference between the two
-        sub a, d
-        jr z, :+
-            sra a
-            sra a
-            sra a
-        :
-        add a, d
-        cp a, BATTLE_WINDOW_X_CLOSED
-        jr c, :+
-            ld a, BATTLE_WINDOW_X_CLOSED
-        :
-        ld [hl+], a
-        inc hl
-
-        ; Read battle details X -> D
-        ld a, [hl+]
-        ld d, a
-        ld a, BATTLE_WINDOW_X_OPEN
-        ; ld b, 255
-        bit PADB_B, b
-        jr z, :+
-            ; have to add 10 or interpolation looks weird...
-            ; Clamp result after interpolation
-            ld a, BATTLE_WINDOW_X_CLOSED + 10
-        :
-        ld [hl-], a
-
-        ; Find difference between the two
-        sub a, d
-        jr z, :+
-            sra a
-            sra a
-            sra a
-        :
-        add a, d
-        cp a, BATTLE_WINDOW_X_CLOSED
-        jr c, :+
-            ld a, BATTLE_WINDOW_X_CLOSED
-        :
-        ld [hl+], a
-        inc hl
 
         ; Wait for Vblank
         .halting
@@ -106,6 +55,76 @@ GameloopBattle::
         ; Repeat gameloop
         jr .loop
     ;
+;
+
+
+
+; Updates the target positions for the menu and details.
+UpdateWindowTarget:
+    ld a, [wInput]
+
+    ; Set menu X-target
+    ld hl, wBattleMenuXTarget
+    ld [hl], BATTLE_WINDOW_X_OPEN
+    bit PADB_A, a
+    jr z, :+
+        ; have to add 10 or interpolation looks weird...
+        ; Clamp result after interpolation
+        ld [hl], BATTLE_WINDOW_X_CLOSED + 10
+    :
+
+    ; Set details X-target
+    ld hl, wBattleDetailsXTarget
+    ld [hl], BATTLE_WINDOW_X_OPEN
+    bit PADB_B, a
+    jr z, :+
+        ; have to add 10 or interpolation looks weird...
+        ; Clamp result after interpolation
+        ld [hl], BATTLE_WINDOW_X_CLOSED + 10
+    :
+
+    ; Yup, that's all
+    ret
+;
+
+
+
+; Moves the window layer using interpolation.
+MoveWindow:
+    ld hl, wBattleMenuX
+    ld c, 2
+
+    .loop
+        ; Read current X -> D, target X -> A
+        ld a, [hl+]
+        ld d, a
+        ld a, [hl-]
+
+        ; Find amount to interpolate by
+        sub a, d
+        jr z, :+
+            sra a
+            sra a
+            sra a
+        :
+
+        ; Add difference, with clamping
+        add a, d
+        cp a, BATTLE_WINDOW_X_CLOSED
+        jr c, :+
+            ld a, BATTLE_WINDOW_X_CLOSED
+        :
+
+        ; Store new X-position
+        ld [hl+], a
+        inc hl
+
+        ; Do we loop?
+        dec c
+        jr nz, .loop
+    ;
+
+    ret
 ;
 
 
