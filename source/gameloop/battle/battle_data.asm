@@ -29,6 +29,12 @@ SECTION "GAMELOOP BATTLE DATA", ROMX
         ld d, 18
         call MemcpyTile2BPP
 
+        ; Load sprites
+        ld bc, TilesetSprites
+        ld hl, VT_BATTLE_TESTSPRITES
+        ld d, 32
+        call MemcpyTile2BPP
+
         ; Build enemy cell tilemaps
         ld hl, VM_BATTLE_CELLS_ENEMY
         ld a, VTI_BATTLE_CELLS_ENEMY
@@ -96,13 +102,15 @@ SECTION "GAMELOOP BATTLE DATA", ROMX
         call PaletteCopyBG
         call PaletteCopyBG
         call PaletteCopyBG
+        xor a
+        call PaletteCopyOBJ
 
         ; Set all the hardware registers
         ld a, VMI_BATTLE_BASE_X0*8
         ldh [rSCX], a
         ld a, VMI_BATTLE_BASE_Y0*8
         ldh [rSCY], a
-        ld a, LCDCF_BLK21 | LCDCF_BGON | LCDCF_ON | LCDCF_WINON | LCDCF_WIN9800 | LCDCF_BG9800
+        ld a, LCDCF_BLK21 | LCDCF_BGON | LCDCF_ON | LCDCF_WINON | LCDCF_WIN9800 | LCDCF_BG9800 | LCDCF_OBJON | LCDCF_OBJ16
         ldh [rLCDC], a
 
         ; Yeah, we are done here
@@ -191,6 +199,12 @@ SECTION "GAMELOOP BATTLE DATA", ROMX
     TilesetGridTiles: INCBIN "gameloop/battle/tiles.2bpp"
     .end
 
+    ; Sprite data, for testing
+    TilesetSprites:
+        INCBIN "gameloop/battle/testsprite1.2bpp"
+        INCBIN "gameloop/battle/testsprite2.2bpp"
+    .end
+
     ; Default arena background palette
     PaletteArena:
         color_rgb8 $22, $20, $34
@@ -222,5 +236,13 @@ SECTION "GAMELOOP BATTLE DATA", ROMX
         color_rgb8 $84, $7E, $87
         color_rgb8 $00, $00, $00
         color_rgb8 $00, $00, $00
+    ;
+
+    ; Palette for testing sprites
+    PaletteSprites:
+        color_t 0, 0, 0
+        color_t 31, 0, 0
+        color_t 0, 31, 0
+        color_t 0, 0, 31
     ;
 ;

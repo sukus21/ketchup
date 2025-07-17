@@ -18,7 +18,8 @@ GameloopBattleVBlank::
     ldh [rWY], a
 
     ; Do OAM DMA
-    ; TODO: sprites
+    ld a, high(wOAM)
+    call hDMA
 
     ; Process VQueue jobs
     call VQueueExecute
