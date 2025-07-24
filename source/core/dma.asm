@@ -1,16 +1,8 @@
 INCLUDE "hardware.inc/hardware.inc"
 INCLUDE "macro/memcpy.inc"
 
-SECTION "OAM DMA", ROM0
 
-; Initializes the OAM DMA routine.  
-; Lives in ROM0.
-;
-; Saves: none
-OamDmaInit::
-    memcpy_label DMARoutine, hDMA
-    ret
-;
+SECTION "OAM DMA", ROM0
 
 DMARoutine:
 LOAD "OAM DMA ROUTINE", HRAM
@@ -44,3 +36,14 @@ LOAD "OAM DMA ROUTINE", HRAM
     hLYC:: jp VecError
 ENDL
 .end
+
+
+
+; Initializes the OAM DMA routine.  
+; Lives in ROM0.
+;
+; Saves: none
+OamDmaInit::
+    memcpy_label DMARoutine, hDMA
+    ret
+;

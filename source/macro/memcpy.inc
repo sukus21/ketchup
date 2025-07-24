@@ -62,10 +62,24 @@ MACRO memcpy_label
     ld bc, \1
     IF _NARG == 3
         ld de, \3
+        call Memcpy
     ELSE
-        ld de, \1.end - \1
+        IF ISCONST(\1.end - \1)
+            IF (\1.end - \1) & $F == 0
+                ld d, (\1.end - \1) >> 4
+                call MemcpyTile2BPP
+            ELIF (\1.end - \1) > 0 && (\1.end - \1) <= 256
+                ld d, \1.end - \1
+                call MemcpyShort
+            ELSE
+                ld de, \1.end - \1
+                call Memcpy
+            ENDC
+        ELSE
+            ld de, \1.end - \1
+            call Memcpy
+        ENDC
     ENDC
-    call Memcpy
 ENDM
 
     ENDC
