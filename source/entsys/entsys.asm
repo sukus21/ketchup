@@ -5,6 +5,7 @@ SECTION "ENTSYS", ROM0
 
 ; Execute code for all active entities.  
 ; Passes entity pointer in DE to step functions.  
+; Switches ROMX and potentially WRAMX and SRAM banks.  
 ; Lives in ROM0.
 ; 
 ; Destroys: all
