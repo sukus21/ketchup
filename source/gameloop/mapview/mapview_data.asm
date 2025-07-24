@@ -83,12 +83,22 @@ GameloopMapviewInitTransfer::
         call PaletteCopyBG
     ENDR
 
+    xor a
+    call PaletteCopyOBJ
+
     ; Load tileset
     xor a
     ldh [rVBK], a
+
     ld bc, TilesetGridTiles
     ld hl, _VRAM9000
     ld d, 51
+    call MemcpyTile2BPP
+
+    ; Load sprite tileset
+    ld bc, SpriteTiles
+    ld hl, _VRAM8000
+    ld d, 4
     call MemcpyTile2BPP
     
     ; Load pointer to tilemap
@@ -589,6 +599,10 @@ TilesetGridTiles:
     .numbers: INCBIN "gameloop/mapview/numbers.2bpp"
 .end
 
+SpriteTiles:
+    INCBIN "gameloop/mapview/sprites.2bpp"
+.end
+
 Pallete:
     ; Background + Default path
     color_rgb8 $40, $50, $58
@@ -625,4 +639,11 @@ Pallete:
     color_rgb8 $00, $00, $00
     color_rgb8 $F0, $10, $10
     color_rgb8 $40, $3A, $08
+;
+
+SpritePalette:
+    color_t 0, 0, 0
+    color_t 0, 0, 0
+    color_t 5, 28, 4
+    color_t 3, 20, 2
 ;

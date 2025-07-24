@@ -21,9 +21,21 @@ GameloopMapview::
     ld [hl+], a
     ld [hl+], a
 
+    ; Clear OAM mirror
+    ld bc, $00_10
+    ld hl, wOAM
+    call MemsetChunked
+
+    ; Prepare this, just in case
+    call OamDmaInit
+
     ; Transfer the required assets to VRAM
     vqueue_enqueue GameloopMapviewInitTransfer
     farcall_x GameloopLoading
+
+    ; Do initial VBlank
+    call WaitVBlank
+    farcall_x GameloopBattleVBlank
 
     .loop:
         call ReadInput
@@ -77,6 +89,109 @@ GameloopMapview::
             ;
         :
 
+        ; Draw cursors
+        ld a, BANK(wGameStateTravelProgress)
+        ldh [rSVBK], a
+
+        ld hl, wGameStateTravelProgress
+        ld d, [hl]
+
+        ld a, d
+        swap a
+        add a, a
+        and a, $E0
+        ld e, a
+
+        ld a, [wMapviewScroll + 1]
+        cpl 
+        add a, 32
+        add a, e
+        jr c, .doneDrawingCursors
+        cp a, 160
+        jr nc, .doneDrawingCursors
+            ld c, a
+
+            ld a, d
+            or a, a
+            jr z, .optionBitmaskFromEntry
+                ; Get pointer to current lane
+                add a, LOW(wGameStatePathTaken)
+                ld l, a
+
+                ; Get pointer to current room
+                ld a, d
+                add a, a
+                add a, a
+                add a, d ; a = d * 5
+                add a, LOW(wGameStateMapRoomData)
+
+                ; Get current room paths
+                ld a, [hl]
+                and a, $E0
+
+                ; Shift paths depending on current lane
+                ld l, d
+                ld h, a
+                xor a, a
+                :
+                    sla h
+                    rla
+                    dec l
+                    jr nz, :-
+                ;
+
+                ld e, a
+                jr .gotOptionBitmask
+            .optionBitmaskFromEntry:
+                ld l, LOW(wGameStateMapRoomData)
+                ld b, 1<<4
+                ld e, 0
+                :
+                    ld a, [hl+]
+                    or a, a
+                    jr z, :+
+                        ld a, e
+                        or a, b
+                        ld e, a
+                    :
+                    srl b
+                    jr nz, :--
+                ;
+            .gotOptionBitmask:
+
+            ld a, 160 - 8
+
+            .drawCursorLoop:
+                srl e
+                jr nc, :+
+                    ld d, a
+                    push de
+
+                    ld b, a
+                    ld h, HIGH(wOAM)
+                    ld de, CursorSprite
+                    xor a, a
+                    call SpriteDrawTemplate
+
+                    pop de
+                    ld a, d
+
+                    sub a, 32
+                    
+                    jr .drawCursorLoop
+                :
+                
+                jr z, .doneDrawingCursors
+                sub a, 32
+                
+                jr .drawCursorLoop
+            ;
+        .doneDrawingCursors:
+
+        ; Done processing for this frame, finish things off
+        ld h, high(wOAM)
+        call SpriteFinish
+
         ; Wait for Vblank
         .halting
             halt
@@ -91,10 +206,14 @@ GameloopMapview::
 
         call MapviewVBlank
 
-        jr .loop
+        jp .loop
     ;
 
 MapviewVBlank:
+    ; Do OAM DMA
+    ld a, high(wOAM)
+    call hDMA
+    
     ; Set scroll for HUD
     ld a, 4
     ldh [rSCX], a
@@ -135,7 +254,7 @@ EndHud:
     ldh [rSCY], a
 
     ; Set LCD control
-    ld a, $82
+    ld a, LCDCF_ON | LCDCF_OBJ16 | LCDCF_OBJON
     ldh [rLCDC], a
 
     reti
@@ -148,6 +267,17 @@ hudEdgeCol:
 
 mapCol:
     color_rgb8 $40, $50, $58
+
+CheckmarkSprite:
+    db %10000000
+    db $00, 0
+;
+
+CursorSprite:
+    db %11000000
+    db $02, 0
+    db $02, OAMF_XFLIP
+;
 
 SECTION "GAMELOOP MAPVIEW VARIABLES", WRAM0
 

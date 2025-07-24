@@ -32,7 +32,7 @@ layerRoomTypeProbabillities:
     db 20, 10, 3, 16
     db 8, 10, 22, 4
     db 6, 25, 12, 63
-    db 15, 6, 8, 9
+    db 15, 6, 8, 2
     db 29, 4, 0, 31
     db 0, 0, 128, 0
 
@@ -241,7 +241,7 @@ SECTION "PLAYER STATS", SRAM
     ; Encoded as BCD.
     sAccumulatedScore:: ds 4
 
-SECTION "GAME STATE", WRAMX, ALIGN[4]
+SECTION "GAME STATE", WRAMX, ALIGN[7]
     ; The initial seed set at the start of the run.
     ; Will not be updated over the course of a run.
     wRunSeed:: ds 3
