@@ -225,8 +225,11 @@ MapviewVBlank:
 
     LYC_set_jumppoint EndHud
 
+    ld a, HUD_HEIGHT
+    ldh [rLYC], a
+
     ; Set STAT mode
-    ld a, STATF_MODE00
+    ld a, STATF_LYC | STATF_MODE00
     ldh [rSTAT], a
 
     ; Reset and enable LYC + VBlank interrupts
@@ -238,12 +241,15 @@ MapviewVBlank:
     reti
 
 EndHud:
+    push af
+
     ; Skip if this is the wrong scanline
-    ldh a, [rLY]
-    cp a, HUD_HEIGHT
-    jr z, .actuallyEndHud
-        reti
-    .actuallyEndHud
+    ; ldh a, [rLY]
+    ; cp a, HUD_HEIGHT
+    ; jr z, .actuallyEndHud
+    ;     pop af
+    ;     reti
+    ; .actuallyEndHud
 
     ; Apply scroll
     xor a, a
@@ -256,6 +262,8 @@ EndHud:
     ; Set LCD control
     ld a, LCDCF_ON | LCDCF_OBJ16 | LCDCF_OBJON
     ldh [rLCDC], a
+
+    pop af
 
     reti
 
