@@ -154,40 +154,15 @@ SECTION "ENTITY BATTLE PLAYER", ROMX
             add a, BATTLE_STATS_X
             ld e, a
 
-            ; Get X/Y position -> BC
+            ; Get X/Y grid position -> BC
             ld a, [de]
             ld b, a
             inc e
             ld a, [de]
             ld c, a
 
-            ; Transform X gridspace to screenspace
-            ld a, b
-            add a, a
-            add a, a
-            add a, a
-            ld b, a
-            add a, a
-            add a, b
-            add a, 8 + 11
-            ld b, a
-            
-            ; Transform Y gridspace to screenspace
-            ld a, c
-            add a, a
-            add a, a
-            add a, a
-            ld c, a
-            add a, a
-            add a, c
-
-            ; Offset to account for gap between enemy and player grids
-            cp a, 2*24
-            jr c, :+
-                add a, 8
-            :
-            add a, 8 + 2
-            ld c, a
+            ; Convert grid-space into screen-space
+            call BattleGridspaceToScreenspace
 
             ; Store these back in player entity
             relpointer_move ENTVAR_PLAYER_X
