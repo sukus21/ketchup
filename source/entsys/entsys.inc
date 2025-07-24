@@ -73,7 +73,7 @@ DEF ENTSYS_FLAGB_COLLISION RB 1
 ;
 ; Destroys: all
 MACRO entsys_new
-    call entsys_new\1
+    call EntsysNew\1
     ld h, b
     ld l, c
     relpointer_init l

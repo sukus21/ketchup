@@ -21,6 +21,15 @@ GameloopBattleVBlank::
     ld a, high(wOAM)
     call hDMA
 
+    ; Set camera position
+    ld a, [wBattleCameraX+1]
+    add a, BATTLE_CAMERA_X0
+    ldh [rSCX], a
+
+    ld a, [wBattleCameraY]
+    add a, BATTLE_CAMERA_Y0
+    ldh [rSCY], a
+
     ; Process VQueue jobs
     call VQueueExecute
 

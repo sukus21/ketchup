@@ -4,6 +4,7 @@ INCLUDE "macro/lyc.inc"
 INCLUDE "gameloop/battle/battle.inc"
 INCLUDE "macro/farcall.inc"
 INCLUDE "gameloop/battle/vram.inc"
+INCLUDE "struct/battle_stats.inc"
 
 
 SECTION "GAMELOOP BATTLE", ROMX
@@ -21,24 +22,54 @@ GameloopBattle::
     ld [wBattleDetailsXTarget], a
     ld [wBattleMenuXTarget], a
 
-    ; Set default sprite positions
-    ld hl, wBattleSprite1X
-    ld a, 40
-    ld [hl+], a
-    ld a, 60
-    ld [hl+], a
-    ld a, 80
-    ld [hl+], a
-    ld a, 90
-    ld [hl+], a
+    ; Reset camera position
+    xor a
+    ld hl, wBattleCameraX
+    REPT 4
+        ld [hl+], a
+    ENDR
+
+    ; Initialize battle states
+    ; TODO: HP should be carried over from somewhere else
+    ld hl, wBattleStats
+    ld bc, $00_18
+    call MemsetShort
 
     ; Clear OAM mirror
-    ld bc, $00_10
-    ld hl, wOAM
-    call MemsetChunked
+    ld h, high(wOAM)
+    call SpriteInit
 
     ; Prepare this, just in case
     call OamDmaInit
+    call EntsysInit
+
+    ; Initialize player characters
+    ld hl, wBattleStatsDuffin + BATTLE_STATS_X
+    ld a, 0
+    ld [hl+], a
+    add a, 2
+    ld [hl+], a
+    ld bc, wBattleStatsDuffin
+    ld d, CHARID_DUFFIN
+    farcall_x EntityBattlePlayerCreate
+
+    ld hl, wBattleStatsMenja + BATTLE_STATS_X
+    ld a, 1
+    ld [hl+], a
+    add a, 2
+    ld [hl+], a
+    ld bc, wBattleStatsMenja
+    ld d, CHARID_MENJA
+    farcall_x EntityBattlePlayerCreate
+
+    ld hl, wBattleStatsHerbert + BATTLE_STATS_X
+    ld a, 2
+    ld [hl+], a
+    add a, 2
+    ld [hl+], a
+    ld bc, wBattleStatsHerbert
+    ld d, CHARID_HERBERT
+    farcall_x EntityBattlePlayerCreate
 
     ; Transfer the required assets to VRAM
     vqueue_enqueue GameloopBattleInitTransfer
@@ -52,29 +83,9 @@ GameloopBattle::
     .loop
         ; Do things on the CPU
         call ReadInput
+        farcall_x EntsysStep
         call UpdateWindowTarget
         call MoveWindow
-        call UpdateSpritePositions
-
-        ; Draw test sprite 1
-        ld hl, wBattleSprite1X
-        ld a, [hl+]
-        ld c, [hl]
-        ld b, a
-        ld hl, wOAM
-        ld de, TemplateTestSprite1
-        xor a
-        call SpriteDrawTemplate
-
-        ; Draw test sprite 2
-        ld hl, wBattleSprite2X
-        ld a, [hl+]
-        ld c, [hl]
-        ld b, a
-        ld hl, wOAM
-        ld de, TemplateTestSprite2
-        xor a
-        call SpriteDrawTemplate
 
         ; Done processing for this frame, finish things off
         ld h, high(wOAM)
@@ -97,47 +108,6 @@ GameloopBattle::
 
         ; Repeat gameloop
         jr .loop
-    ;
-;
-
-
-
-; Update sprite positions based on keys.
-UpdateSpritePositions:
-    ld a, [wInput]
-    ld b, a
-
-    bit PADB_A, b
-    ld hl, wBattleSprite1X
-    call nz, .update
-
-    bit PADB_B, b
-    ld hl, wBattleSprite2X
-    call nz, .update
-
-    ret
-
-    .update
-        bit PADB_LEFT, b
-        jr z, :+
-            dec [hl]
-        :
-        bit PADB_RIGHT, b
-        jr z, :+
-            inc [hl]
-        :
-        inc hl
-
-        bit PADB_UP, b
-        jr z, :+
-            dec [hl]
-        :
-        bit PADB_DOWN, b
-        jr z, :+
-            inc [hl]
-        :
-
-        ret
     ;
 ;
 
@@ -212,33 +182,6 @@ MoveWindow:
 ;
 
 
-; Sprite template for battle loop
-TemplateTestSprite1:
-    db %11111111
-    db VTI_BATTLE_TESTSPRITE_1 + $00, 0
-    db VTI_BATTLE_TESTSPRITE_1 + $04, 0
-    db VTI_BATTLE_TESTSPRITE_1 + $08, 0
-    db VTI_BATTLE_TESTSPRITE_1 + $0C, 0
-    db VTI_BATTLE_TESTSPRITE_1 + $02, 0
-    db VTI_BATTLE_TESTSPRITE_1 + $06, 0
-    db VTI_BATTLE_TESTSPRITE_1 + $0A, 0
-    db VTI_BATTLE_TESTSPRITE_1 + $0E, 0
-;
-
-; Sprite template for battle loop
-TemplateTestSprite2:
-    db %11111111
-    db VTI_BATTLE_TESTSPRITE_2 + $00, 0
-    db VTI_BATTLE_TESTSPRITE_2 + $04, 0
-    db VTI_BATTLE_TESTSPRITE_2 + $08, 0
-    db VTI_BATTLE_TESTSPRITE_2 + $0C, 0
-    db VTI_BATTLE_TESTSPRITE_2 + $02, 0
-    db VTI_BATTLE_TESTSPRITE_2 + $06, 0
-    db VTI_BATTLE_TESTSPRITE_2 + $0A, 0
-    db VTI_BATTLE_TESTSPRITE_2 + $0E, 0
-;
-
-
 
 SECTION "GAMELOOP BATTLE VARIABLES", WRAM0
 
@@ -253,7 +196,22 @@ wBattleDetailsXTarget:: ds 1
 ; Determines if battle menu is ready to be shown.
 wBattleMenuReady:: ds 1
 
-wBattleSprite1X:: ds 1
-wBattleSprite1Y:: ds 1
-wBattleSprite2X:: ds 1
-wBattleSprite2Y:: ds 1
+; Camera X-position
+wBattleCameraX:: ds 2
+
+; Camera Y-position
+wBattleCameraY:: ds 2
+
+
+SECTION "BATTLE STATS", WRAM0, ALIGN[3]
+
+    ; Contains the battle state for player characters and enemies.
+    wBattleStats::
+
+    wBattleStatsDuffin:: ds BATTLE_STATS_T
+    wBattleStatsMenja:: ds BATTLE_STATS_T
+    wBattleStatsHerbert:: ds BATTLE_STATS_T
+
+    wBattleStatsEnemy1:: ds BATTLE_STATS_T
+    wBattleStatsEnemy2:: ds BATTLE_STATS_T
+;
