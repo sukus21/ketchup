@@ -13,6 +13,7 @@ SECTION "GAMELOOP BATTLE", ROMX
 ;
 ; Destroys: all
 GameloopBattle::
+    farcall_x initRun
 
     ; Set default menu positions
     ld a, BATTLE_WINDOW_X_OPEN

@@ -6,6 +6,8 @@ DEF MAP_LANES EQU 5
 
 DEF NUM_STRONG_ENCOUNTERS EQU 4
 
+;DEF FIXED_SEED EQU $37EA
+
 SECTION "GAME STATE MANAGEMENT", ROMX, ALIGN[4]
 
 ; Lookup and probabillity tables for map gen:
@@ -14,10 +16,10 @@ SECTION "GAME STATE MANAGEMENT", ROMX, ALIGN[4]
 ; probabillity and at least one will always be included.
 pathGenLookup:
     ds 3, GAMESTATE_ROOM_PATH_FLAGS_L
-    ds 6, GAMESTATE_ROOM_PATH_FLAGS_S
+    ds 5, GAMESTATE_ROOM_PATH_FLAGS_S
     ds 3, GAMESTATE_ROOM_PATH_FLAGS_R
     ds 1, GAMESTATE_ROOM_PATH_FLAGS_L | GAMESTATE_ROOM_PATH_FLAGS_S
-    ds 1, GAMESTATE_ROOM_PATH_FLAGS_L | GAMESTATE_ROOM_PATH_FLAGS_R
+    ds 2, GAMESTATE_ROOM_PATH_FLAGS_L | GAMESTATE_ROOM_PATH_FLAGS_R
     ds 1, GAMESTATE_ROOM_PATH_FLAGS_S | GAMESTATE_ROOM_PATH_FLAGS_R
     ds 1, GAMESTATE_ROOM_PATH_FLAGS_L | GAMESTATE_ROOM_PATH_FLAGS_S | GAMESTATE_ROOM_PATH_FLAGS_R
 
@@ -27,21 +29,23 @@ pathGenLookup:
 ; All probabillities are out of 128.
 layerRoomTypeProbabillities:
     db 15, 15, 0, 0
-    db 20, 10, 3, 6
-    db 8, 10, 6, 11
-    db 6, 16, 18, 6
-    db 5, 6, 8, 9
-    db 29, 4, 0, 21
+    db 20, 10, 3, 16
+    db 8, 10, 22, 4
+    db 6, 25, 12, 63
+    db 15, 6, 8, 9
+    db 29, 4, 0, 31
     db 0, 0, 128, 0
 
 ; Actual functions
 
 initRun::
     ; Set RNG seed (for testing)
-    ld a, $37
-    ldh [hRNGSeed], a
-    ld a, $EA
-    ldh [hRNGSeed + 1], a
+    IF DEF(FIXED_SEED)
+        ld a, HIGH(FIXED_SEED)
+        ldh [hRNGSeed], a
+        ld a, LOW(FIXED_SEED)
+        ldh [hRNGSeed + 1], a
+    ENDC
 
     ; Set the right WRAM bank
     ld a, BANK(wRunSeed)
@@ -56,8 +60,15 @@ initRun::
     xor a, a
     ld [hl+], a
 
+    ; Set character health
+    ld a, $30
+    ld [hl+], a
+    ld [hl+], a
+    ld [hl+], a
+
     ; Set initial player funds to zero
-    ld [hl+], a ; a is already zero
+    xor a, a
+    ld [hl+], a
     ld [hl+], a
 
     ; Set character equipment
@@ -91,7 +102,7 @@ initRun::
     ld [hl-], a
 
     ld d, $0A
-    ld e, MAP_DEPTH - 2
+    ld e, MAP_DEPTH - 1
 
     .LevelLoop:
         FOR I, MAP_LANES
@@ -168,7 +179,7 @@ GenerateRandomRoom:
     add a, a
 
     ; Load pointer to row of layerRoomTypeProbabillities
-    add a, LOW(layerRoomTypeProbabillities)
+    add a, LOW(layerRoomTypeProbabillities - 4)
     ld l, a
     ld h, HIGH(layerRoomTypeProbabillities)
 
@@ -230,13 +241,20 @@ SECTION "PLAYER STATS", SRAM
     ; Encoded as BCD.
     sAccumulatedScore:: ds 4
 
-SECTION "GAME STATE", WRAMX
+SECTION "GAME STATE", WRAMX, ALIGN[4]
     ; The initial seed set at the start of the run.
     ; Will not be updated over the course of a run.
     wRunSeed:: ds 3
 
+    ; The health of each character.
+    ; Stored in BCD
+    wGameStateCharacterHealth::
+        .herbert: ds 1
+        .menja: ds 1
+        .duffin: ds 1
+
     ; The amount of money that the player currently has.
-    ; Encoded as BCD.
+    ; Encoded as BCD. Should not exceed 999.
     wGameStatePlayerFunds:: ds 2
 
     ; The equipment that the player's characters have.

@@ -200,7 +200,8 @@ Main::
     ldh [rLCDC], a
     
     ; Go to gameloop
-    jp GameloopBattle
+    ; jp GameloopBattle
+    jp GameloopMapview
 ;
 
 
