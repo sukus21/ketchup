@@ -84,7 +84,9 @@ GameloopMapviewInitTransfer::
     ENDR
 
     xor a
-    call PaletteCopyOBJ
+    REPT 2
+        call PaletteCopyOBJ
+    ENDR
 
     ; Load tileset
     xor a
@@ -606,25 +608,25 @@ SpriteTiles:
 Pallete:
     ; Background + Default path
     color_rgb8 $40, $50, $58
-    color_rgb8 $00, $00, $00
+    color_rgb8 $00, $00, $10
     color_rgb8 $40, $C0, $90
     color_rgb8 $40, $C0, $90
 
     ; Background + Icon
     color_rgb8 $40, $50, $58
-    color_rgb8 $00, $00, $00
+    color_rgb8 $00, $00, $10
     color_rgb8 $80, $72, $1a
     color_rgb8 $d3, $ca, $00
 
     ; Select path A
     color_rgb8 $40, $50, $58
-    color_rgb8 $00, $00, $00
+    color_rgb8 $00, $00, $10
     color_rgb8 $40, $C0, $90
     color_rgb8 $50, $F0, $A0
 
     ; Select path B
     color_rgb8 $40, $50, $58
-    color_rgb8 $00, $00, $00
+    color_rgb8 $00, $00, $10
     color_rgb8 $50, $F0, $A0
     color_rgb8 $40, $C0, $90
 
@@ -642,8 +644,15 @@ Pallete:
 ;
 
 SpritePalette:
+    ; Green
     color_t 0, 0, 0
     color_t 0, 0, 0
     color_t 5, 28, 4
     color_t 3, 20, 2
+
+    ; Grey
+    color_t 0, 0, 0
+    color_t 0, 0, 0
+    color_t 10, 10, 10
+    color_t 3, 3, 3
 ;
