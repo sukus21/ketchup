@@ -100,7 +100,7 @@ GameloopMapviewInitTransfer::
     ; Load sprite tileset
     ld bc, SpriteTiles
     ld hl, _VRAM8000
-    ld d, 4
+    ld d, 6
     call MemcpyTile2BPP
     
     ; Load pointer to tilemap
@@ -607,40 +607,40 @@ SpriteTiles:
 
 Pallete:
     ; Background + Default path
-    color_rgb8 $40, $50, $58
+    color_rgb8 $30, $28, $28
     color_rgb8 $00, $00, $10
-    color_rgb8 $40, $C0, $90
+    color_rgb8 $60, $40, $20
     color_rgb8 $40, $C0, $90
 
     ; Background + Icon
-    color_rgb8 $40, $50, $58
+    color_rgb8 $30, $28, $28
     color_rgb8 $00, $00, $10
     color_rgb8 $80, $72, $1a
     color_rgb8 $d3, $ca, $00
 
     ; Select path A
-    color_rgb8 $40, $50, $58
+    color_rgb8 $40, $38, $30
     color_rgb8 $00, $00, $10
     color_rgb8 $40, $C0, $90
     color_rgb8 $50, $F0, $A0
 
     ; Select path B
-    color_rgb8 $40, $50, $58
+    color_rgb8 $40, $38, $30
     color_rgb8 $00, $00, $10
     color_rgb8 $50, $F0, $A0
     color_rgb8 $40, $C0, $90
 
     ; Menu with Green and Blue
-    color_rgb8 $50, $4A, $18
+    color_rgb8 $30, $4A, $58
     color_rgb8 $00, $00, $00
     color_rgb8 $20, $F0, $30
     color_rgb8 $40, $10, $E0
 
     ; Menu with Red and Shade
-    color_rgb8 $50, $4A, $18
+    color_rgb8 $30, $4A, $58
     color_rgb8 $00, $00, $00
     color_rgb8 $F0, $10, $10
-    color_rgb8 $40, $3A, $08
+    color_rgb8 $20, $2A, $38
 ;
 
 SpritePalette:

@@ -33,6 +33,9 @@ GameloopMapview::
     ld a, b
     ld [wMapviewAdvanceSelection], a
 
+    ld a, 0
+    ld [wMapviewAnimTime], a
+
     ; Clear OAM mirror
     ld bc, $00_10
     ld hl, wOAM
@@ -180,14 +183,42 @@ GameloopMapview::
             ld a, 160 - 8
 
             .drawCursorLoop:
+                ld b, a
+                
+                res 0, c
+                ld a, [wMapviewAnimTime]
+                rra
+                rra
+                sub a, d
+                and a, 7
+                jr z, :+
+                    inc c
+                :
+
                 srl e
                 jr nc, :++
-                    ld b, a
 
-                    xor a, a
                     dec d
                     jr z, :+
-                        inc a
+                        push bc
+
+                        ld b, 4
+                        ld h, HIGH(wOAM)
+                        call SpriteGet
+
+                        pop bc
+                        ld a, b
+                        sub a, 4
+
+                        ld [hl], c
+                        inc l
+                        ld [hl+], a
+                        ld [hl], 4
+                        inc l
+                        ld [hl], 1
+
+                        sub a, 28
+                        jr .drawCursorLoop
                     :
 
                     push de
@@ -195,6 +226,7 @@ GameloopMapview::
 
                     ld h, HIGH(wOAM)
                     ld de, CursorSprite
+                    xor a, a
                     call SpriteDrawTemplate
 
                     pop bc
@@ -207,6 +239,7 @@ GameloopMapview::
                 :
                 
                 jr z, .doneDrawingCursors
+                ld a, b
                 sub a, 32
                 dec d
                 
@@ -281,6 +314,9 @@ GameloopMapview::
         ; Done processing for this frame, finish things off
         ld h, high(wOAM)
         call SpriteFinish
+
+        ld hl, wMapviewAnimTime
+        inc [hl]
 
         ; Wait for Vblank
         .halting
@@ -513,3 +549,5 @@ SECTION "GAMELOOP MAPVIEW VARIABLES", WRAM0
     wMapviewAdvanceOptions: ds 1
 
     wMapviewAdvanceSelection: ds 1
+
+    wMapviewAnimTime: ds 1
