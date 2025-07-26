@@ -471,7 +471,9 @@ EnterRoom:
     and a, $07
 
     ; Get pointer into jump table
+    ld e, a
     add a, a
+    add a, e
     ld e, a
     ld d, 0
     ld hl, RoomTypeJumpTable
@@ -479,11 +481,14 @@ EnterRoom:
 
     ; Get jump destination
     ld a, [hl+]
+    ld b, a
+    ld a, [hl+]
     ld h, [hl]
     ld l, a
+    ld a, b
 
     ; LESGOOO!!!
-    jp hl
+    jp farjump
 ;
 
 MapviewVBlank:
@@ -569,19 +574,31 @@ CursorSprite:
     db $02, OAMF_XFLIP
 ;
 
+MACRO pointer24
+    db BANK(\1)
+    dw \1
+ENDM
+
 RoomTypeJumpTable:
-    dw InvalidRoomType ; GAMESTATE_ROOM_TYPE_INACCESSIBLE
-    dw InvalidRoomType ; GAMESTATE_ROOM_TYPE_BOSS
-    dw GameloopMapview ; GAMESTATE_ROOM_TYPE_TREASURE
-    dw GameloopMapview ; GAMESTATE_ROOM_TYPE_SECRET
-    dw GameloopMapview ; GAMESTATE_ROOM_TYPE_CAMP
-    dw GameloopMapview ; GAMESTATE_ROOM_TYPE_MERCHANT
-    dw GameloopMapview ; GAMESTATE_ROOM_TYPE_WEAK_ENCOUNTER
-    dw InvalidRoomType ; GAMESTATE_ROOM_TYPE_STRONG_ENCOUNTER
+    pointer24 InvalidRoomType ; GAMESTATE_ROOM_TYPE_INACCESSIBLE
+    pointer24 GameloopBattle ; GAMESTATE_ROOM_TYPE_BOSS
+    pointer24 GameloopMapview ; GAMESTATE_ROOM_TYPE_TREASURE
+    pointer24 GameloopMapview ; GAMESTATE_ROOM_TYPE_SECRET
+    pointer24 GameloopMapview ; GAMESTATE_ROOM_TYPE_CAMP
+    pointer24 GameloopMapview ; GAMESTATE_ROOM_TYPE_MERCHANT
+    pointer24 GameloopMapview ; GAMESTATE_ROOM_TYPE_WEAK_ENCOUNTER
+    pointer24 InvalidRoomType ; GAMESTATE_ROOM_TYPE_STRONG_ENCOUNTER
 ;
 
 InvalidRoomType:
     rst VecError
+;
+
+SECTION "VARIABLE FARJUMP", ROM0
+
+farjump:
+    ld [$2000], a
+    jp hl
 ;
 
 SECTION "GAMELOOP MAPVIEW VARIABLES", WRAM0
