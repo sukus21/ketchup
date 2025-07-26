@@ -201,7 +201,9 @@ Main::
     
     ; Go to gameloop
     ; jp GameloopBattle
-    jp GameloopMapview
+    ld a, BANK(BeginRun)
+    ldh [rSVBK], a
+    jp BeginRun
 ;
 
 

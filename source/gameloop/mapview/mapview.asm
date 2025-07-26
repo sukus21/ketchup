@@ -13,9 +13,11 @@ DEF MAP_SCROLL_LIMIT EQU 1<<8 + MAP_SCROLL_OFFSET - 144
 
 SECTION "MAP VIEW", ROMX
 
-GameloopMapview::
+BeginRun::
     farcall_x initRun
+    ; Fall through to GameloopMapView
 
+GameloopMapview::
     ld hl, wMapviewScroll
     xor a, a
     ld [hl+], a
@@ -418,14 +420,15 @@ ComputeTravelOptions:
         ret
     ;
 
-; Will eventually be converted into a non-returning routine
 EnterRoom:
+    ; Save progress
     ld a, BANK(wGameStatePathTaken)
     ldh [rSVBK], a
 
     ld hl, wGameStateTravelProgress
     ld a, [hl]
     inc [hl]
+    ld d, a ; Store progress in d
     add a, LOW(wGameStatePathTaken)
     ld l, a
     ld h, HIGH(wGameStatePathTaken)
@@ -434,21 +437,37 @@ EnterRoom:
     cpl a
     add a, 5
     ld [hl], a
+    ld e, a ; Store lane in e
 
-    ; Redo stuff
-    call ComputeTravelOptions
+    ; Find out what kind of room we're entering
+    ; Get pointer to room
+    ld a, d
+    add a, a
+    add a, a
+    add a, d ; a = d * 5
+    add a, e
+    add a, LOW(wGameStateMapRoomData)
+    ld l, a
+    
+    ; Extract room type
+    ld a, [hl]
+    and a, $07
 
-    ld a, [wMapviewAdvanceOptions]
-    ld b, -1
-    :
-        inc b
-        rra
-        jr nc, :-
-    ;
-    ld a, b
-    ld [wMapviewAdvanceSelection], a
+    ; Get pointer into jump table
+    add a, a
+    ld e, a
+    ld d, 0
+    ld hl, RoomTypeJumpTable
+    add hl, de
 
-    ret
+    ; Get jump destination
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
+
+    ; LESGOOO!!!
+    jp hl
+;
 
 MapviewVBlank:
     ; Do OAM DMA
@@ -490,6 +509,7 @@ MapviewVBlank:
     ld [hl], c
 
     reti
+;
 
 EndHud:
     push af
@@ -519,15 +539,7 @@ EndHud:
     pop af
 
     reti
-
-hudCol:
-    color_rgb8 $50, $4A, $18
-
-hudEdgeCol:
-    color_rgb8 $40, $2A, $0F
-
-mapCol:
-    color_rgb8 $40, $50, $58
+;
 
 CheckmarkSprite:
     db %10000000
@@ -538,6 +550,21 @@ CursorSprite:
     db %11000000
     db $02, 0
     db $02, OAMF_XFLIP
+;
+
+RoomTypeJumpTable:
+    dw InvalidRoomType ; GAMESTATE_ROOM_TYPE_INACCESSIBLE
+    dw InvalidRoomType ; GAMESTATE_ROOM_TYPE_BOSS
+    dw GameloopMapview ; GAMESTATE_ROOM_TYPE_TREASURE
+    dw GameloopMapview ; GAMESTATE_ROOM_TYPE_SECRET
+    dw GameloopMapview ; GAMESTATE_ROOM_TYPE_CAMP
+    dw GameloopMapview ; GAMESTATE_ROOM_TYPE_MERCHANT
+    dw GameloopMapview ; GAMESTATE_ROOM_TYPE_WEAK_ENCOUNTER
+    dw InvalidRoomType ; GAMESTATE_ROOM_TYPE_STRONG_ENCOUNTER
+;
+
+InvalidRoomType:
+    rst VecError
 ;
 
 SECTION "GAMELOOP MAPVIEW VARIABLES", WRAM0
@@ -551,3 +578,4 @@ SECTION "GAMELOOP MAPVIEW VARIABLES", WRAM0
     wMapviewAdvanceSelection: ds 1
 
     wMapviewAnimTime: ds 1
+;
