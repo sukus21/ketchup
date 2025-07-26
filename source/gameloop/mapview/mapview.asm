@@ -177,7 +177,7 @@ GameloopMapview::
 
         ; Room entering
         bit PADB_A, c
-        call nz, EnterRoom
+        jp nz, EnterRoom
 
         ; Draw cursors
         ld a, BANK(wGameStateTravelProgress)
