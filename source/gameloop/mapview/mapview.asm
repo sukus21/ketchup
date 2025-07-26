@@ -18,9 +18,26 @@ BeginRun::
     ; Fall through to GameloopMapView
 
 GameloopMapview::
+    ld a, BANK(wGameStateTravelProgress)
+    ldh [rSVBK], a
+
     ld hl, wMapviewScroll
     xor a, a
     ld [hl+], a
+    
+    ld a, [wGameStateTravelProgress]
+    swap a
+    add a, a
+
+    sub a, 32
+    jp nc, :+
+        ld a, 0
+    :
+
+    cp a, MAP_SCROLL_LIMIT
+    jp c, :+
+        ld a, MAP_SCROLL_LIMIT
+    :
     ld [hl+], a
 
     call ComputeTravelOptions
