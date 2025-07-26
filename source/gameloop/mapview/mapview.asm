@@ -13,11 +13,16 @@ DEF MAP_SCROLL_LIMIT EQU 1<<8 + MAP_SCROLL_OFFSET - 144
 
 SECTION "MAP VIEW", ROMX
 
+; Begin a run and enter mapview.
+; Does not return.
 BeginRun::
     farcall_x initRun
     ; Fall through to GameloopMapView
 
+; Enter mapview.
+; Does not return.
 GameloopMapview::
+    ; Set scroll
     ld a, BANK(wGameStateTravelProgress)
     ldh [rSVBK], a
 
@@ -29,17 +34,20 @@ GameloopMapview::
     swap a
     add a, a
 
+    ; Offset + Upper limit
     sub a, 32
     jp nc, :+
         ld a, 0
     :
 
+    ; Lower limit
     cp a, MAP_SCROLL_LIMIT
     jp c, :+
         ld a, MAP_SCROLL_LIMIT
     :
     ld [hl+], a
 
+    ; Prepare navigation-related data
     call ComputeTravelOptions
 
     ld a, [wMapviewAdvanceOptions]
@@ -192,18 +200,22 @@ GameloopMapview::
         jr nc, .doneDrawingCursors
             ld c, a
 
+            ; Get bitmask of available options
             ld a, [wMapviewAdvanceOptions]
             ld e, a
 
+            ; Get current selection
             ld a, [wMapviewAdvanceSelection]
             ld d, a
             inc d
 
+            ; X-coordinate of rightmost potential cursor
             ld a, 160 - 8
 
             .drawCursorLoop:
                 ld b, a
                 
+                ; Add a little jumping animation
                 res 0, c
                 ld a, [wMapviewAnimTime]
                 rra
@@ -214,11 +226,12 @@ GameloopMapview::
                     inc c
                 :
 
+                ; Use bitshifts to see what cursors should be drawn
                 srl e
                 jr nc, :++
-
                     dec d
                     jr z, :+
+                        ; Non-selected cursor
                         push bc
 
                         ld b, 4
@@ -240,6 +253,7 @@ GameloopMapview::
                         jr .drawCursorLoop
                     :
 
+                    ; Selected cursor
                     push de
                     push bc
 
@@ -257,7 +271,8 @@ GameloopMapview::
                     jr .drawCursorLoop
                 :
                 
-                jr z, .doneDrawingCursors
+                ; No cursor
+                jr z, .doneDrawingCursors ; If z is set, then the bitmask of remaining cursors is empty
                 ld a, b
                 sub a, 32
                 dec d
@@ -272,22 +287,27 @@ GameloopMapview::
         jr z, .doneDrawingCheckmarks
             ld d, a
 
+            ; Get pointer to previous lane
             add a, LOW(wGameStatePathTaken) - 1
             ld l, a
             ld h, HIGH(wGameStatePathTaken)
 
+            ; Store current scroll in e
             ld a, [wMapviewScroll + 1]
             ld e, a
 
+            ; Calculate y-coordinate of lowest checkmark
             ld a, d
             swap a
             add a, a
             and a, $E0
             dec a
 
+            ; Apply scroll to y-coordinate
             sub a, e
             jr c, .doneDrawingCheckmarks
         
+            ; Skip checkmarks below view
             sub a, 160
             jr c, :++
             :
@@ -301,7 +321,10 @@ GameloopMapview::
             .drawCheckmarkLoop:
                 ld d, a
 
+                ; Get lane at this row
                 ld a, [hl-]
+
+                ; Calculate x-coordinate
                 swap a
                 add a, a
                 and a, $E0
@@ -310,9 +333,11 @@ GameloopMapview::
 
                 push hl
 
+                ; Get sprite slot
                 ld h, HIGH(wOAM)
                 call SpriteGet
 
+                ; Fill sprite slot
                 ld a, d
                 add a, 11
                 ld [hl+], a
@@ -324,6 +349,7 @@ GameloopMapview::
 
                 pop hl
 
+                ; Advance; Stop when next checkmark is above view
                 ld a, d
                 sub a, 32
                 jr nc, .drawCheckmarkLoop
@@ -353,12 +379,21 @@ GameloopMapview::
 
         jp .loop
     ;
+;
 
+; Calculate which rooms on the next lane can be reached and save result
+; to `wMapviewAdvanceOptions`.
+;
+; Saves: none
 ComputeTravelOptions:
+    ; Set WRAM bank
     ld a, BANK(wGameStateTravelProgress)
     ldh [rSVBK], a
-    
+
+    ; Get current depth
     ld a, [wGameStateTravelProgress]
+
+    ; Treat first row differently from the rest
     or a, a
     jr z, .optionBitmaskFromEntry
         ld d, a
@@ -380,6 +415,7 @@ ComputeTravelOptions:
         add a, e
         ld l, a
 
+        ; Find out which rooms can be reached from here
         ld a, [hl+]
         and a, $20
         ld b, a
@@ -391,6 +427,7 @@ ComputeTravelOptions:
         and a, $80
         or a, b
 
+        ; Reverse bitmask
         ld h, a
         xor a, a
         REPT 3
@@ -411,11 +448,12 @@ ComputeTravelOptions:
             jr nz, :-
         ;
 
+        ; Save result and return
         ld [wMapviewAdvanceOptions], a
-
         ret
 
     .optionBitmaskFromEntry:
+        ; Set bitmask depending on what rooms are on the first row
         ld hl, wGameStateMapRoomData
         ld d, 1<<4
         ld e, 0
@@ -431,12 +469,16 @@ ComputeTravelOptions:
             jr nz, :--
         ;
 
+        ; Save result and return
         ld a, e
         ld [wMapviewAdvanceOptions], a
-
         ret
     ;
+;
 
+; Advance the player's position to their selected destination on the next
+; row and switch to a different gameloop depending on the room they enter.
+; Does not return.
 EnterRoom:
     ; Save progress
     ld a, BANK(wGameStatePathTaken)
@@ -595,21 +637,34 @@ InvalidRoomType:
 ;
 
 SECTION "VARIABLE FARJUMP", ROM0
-
+; Switch banks and jump to the specified destination.
+; 
+; Input:
+; - `a`: Bank
+; - `hl`: Address
+;
+; Saves: all
 farjump:
     ld [$2000], a
     jp hl
 ;
 
 SECTION "GAMELOOP MAPVIEW VARIABLES", WRAM0
-
+    ; How far the view is scrolled up or down.
+    ; Increasing value means the view is moving downwards.
+    ; Little-endian 16-bit value; Low 8 bits are subpixel.
     wMapviewScroll: ds 2
 
+    ; Copy of `wMapviewScroll` made at the start of VBlank to avoid
+    ; scroll desynchronization between sprites and tilemaps.
     wMapviewScrollBuffered: ds 2
 
+    ; Bitmask of currently available travel destinations on next row.
     wMapviewAdvanceOptions: ds 1
 
+    ; Lane index of currently selected destination.
     wMapviewAdvanceSelection: ds 1
 
+    ; Increased by 1 every frame. Use for animations.
     wMapviewAnimTime: ds 1
 ;
