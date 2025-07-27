@@ -26,9 +26,10 @@ GetSingleRNG::
 ; Lives in ROM0.
 ; 
 ; Returns:
-; - `de`: Random values
+; - `a`: Second random value
+; - `e`: First random value
 ;
-; Destroys: `af`  
+; Destroys: `f`  
 ; Saves: `bc`, `d`, `hl`
 GetDoubleRNG::
     push hl
