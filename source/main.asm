@@ -200,10 +200,7 @@ Main::
     ldh [rLCDC], a
     
     ; Go to gameloop
-    ; jp GameloopBattle
-    ld a, BANK(BeginRun)
-    ldh [rSVBK], a
-    jp BeginRun
+    farjump BeginRun
 ;
 
 
