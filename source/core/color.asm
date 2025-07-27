@@ -260,6 +260,44 @@ PaletteCopyBG::
 
 
 
+; Copies multiple consecutive cgb palettes to background color memory.
+; Assumes palette access.  
+; Lives in ROM0.
+;
+; Input:
+; - `hl`: First palette address
+; - `a`: First palette index * 8
+; - `b`: Number of consecutive palettes
+;
+; Returns:
+; - `hl`: Address following final palette
+;
+; Destroys: `bc`
+; Saves: `de`
+PaletteCopyMultiBG::
+
+    ; Write palette index
+    set BCPSB_AUTOINC, a
+    ldh [rBCPS], a
+    ld c, low(rBCPD)
+
+    :
+        ; Copy the palette
+        REPT 8
+            ld a, [hl+]
+            ldh [c], a
+        ENDR
+
+        dec b
+        jr nz, :-
+    ;
+
+    ; Return
+    ret
+;
+
+
+
 ; Copies a cgb palette to sprite color memory.  
 ; Assumes palette access.  
 ; Lives in ROM0.

@@ -5,8 +5,6 @@ INCLUDE "macro/farcall.inc"
 INCLUDE "gamestate/gamestate.inc"
 INCLUDE "macro/color.inc"
 
-DEF HUD_HEIGHT EQU $10
-
 DEF MAP_SCROLL_SPEED EQU $113
 DEF MAP_SCROLL_OFFSET EQU $10
 DEF MAP_SCROLL_LIMIT EQU 1<<8 + MAP_SCROLL_OFFSET - 144
@@ -70,6 +68,11 @@ GameloopMapview::
 
     ; Prepare this, just in case
     call OamDmaInit
+
+    ld hl, wStatusHudConfig.endOfHudHandler
+    ld a, LOW(EndHud)
+    ld [hl+], a
+    ld [hl], HIGH(EndHud)
 
     ; Transfer the required assets to VRAM
     vqueue_enqueue GameloopMapviewInitTransfer
@@ -541,29 +544,7 @@ MapviewVBlank:
     ld a, high(wOAM)
     call hDMA
     
-    ; Set scroll for HUD
-    ld a, 4
-    ldh [rSCX], a
-    ldh [rSCY], a
-
-    ; Set LCD control
-    ld a, LCDCF_ON | LCDCF_BG9C00
-    ldh [rLCDC], a
-
-    LYC_set_jumppoint EndHud
-
-    ld a, HUD_HEIGHT
-    ldh [rLYC], a
-
-    ; Set STAT mode
-    ld a, STATF_LYC
-    ldh [rSTAT], a
-
-    ; Reset and enable LYC + VBlank interrupts
-    ld a, IEF_STAT | IEF_VBLANK
-    ldh [rIE], a
-    xor a
-    ldh [rIF], a
+    call DisplayHud
 
     ; Buffer scrolling to synchronize it with sprites.
     ld hl, wMapviewScroll
@@ -585,14 +566,6 @@ EndHud:
     push af
 
     LYC_wait_hblank
-
-    ; Skip if this is the wrong scanline
-    ; ldh a, [rLY]
-    ; cp a, HUD_HEIGHT
-    ; jr z, .actuallyEndHud
-    ;     pop af
-    ;     reti
-    ; .actuallyEndHud
 
     ; Apply scroll
     xor a, a
