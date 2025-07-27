@@ -1,9 +1,17 @@
 INCLUDE "hardware.inc/hardware.inc"
 INCLUDE "macro/color.inc"
+INCLUDE "macro/memcpy.inc"
 
 SECTION "MAPVIEW DATA", ROMX, ALIGN[8]
 
-pathLut:
+; Look-up table for tiles to be used to draw paths between rooms.
+; Contains the tiles between four rooms.
+; Keys consist of four bits:
+; - Whether there is a vertical path to the left
+; - Whether there is a diagonal path from top right to bottom left
+; - Whether there is a diagonal path from top left to bottom right
+; - Whether there is a vertical path to the right
+PathLut:
     ; ...
     db 0, 0, 0, 0
     db 0, 0, 0, 0
@@ -68,6 +76,11 @@ pathLut:
     db 33, 31, 30, 33
     db 33, 30, 31, 33
 
+; Run during VBlank at upon entering the mapview gameloop.
+; Initializes palettes and generates tilemaps for both the HUD and
+; the view of the map itself.
+;
+; Saves: none
 GameloopMapviewInitTransfer::
     ld a, BANK(wGameStateMapRoomData)
     ld [rSMBK], a
@@ -92,16 +105,10 @@ GameloopMapviewInitTransfer::
     xor a
     ldh [rVBK], a
 
-    ld bc, TilesetGridTiles
-    ld hl, _VRAM9000
-    ld d, 51
-    call MemcpyTile2BPP
+    memcpy_label TilesetGridTiles, _VRAM9000
 
     ; Load sprite tileset
-    ld bc, SpriteTiles
-    ld hl, _VRAM8000
-    ld d, 6
-    call MemcpyTile2BPP
+    memcpy_label SpriteTiles, _VRAM8000
     
     ; Load pointer to tilemap
     ld hl, _SCRN0
@@ -248,6 +255,9 @@ GameloopMapviewInitTransfer::
 
     ret
 
+; Updates the HUD with current health and money.
+;
+; Saves: none
 UpdateStatusHud::
     ld hl, _SCRN1 + 32
 
@@ -256,6 +266,16 @@ UpdateStatusHud::
     
     ; Fall through to FillHudInfo
 
+; Generates the second row of tiles in the HUD. That is the row
+; displaying the actual information shown in the HUD.
+;
+; Input:
+; - hl: Pointer to the start of the row being filled
+;
+; Returns:
+; - hl: Increased by 21
+; 
+; Saves: none
 FillHudInfo:
     ld bc, wGameStateCharacterHealth
 
@@ -326,6 +346,16 @@ FillHudInfo:
 
     ret
 
+; Fills a row of 20 tiles with tile 0, with all attributes also being 0.
+;
+; Input:
+; - `hl`: Pointer to the start of the row being filled
+;
+; Returns:
+; - `hl`: Increased by 32 (start of next row of a 32x32 tilemap)
+;
+; Destroys: `af`, `c`
+; Saves: `b`, `de`
 EmptyRow:
     ; Set VRAM bank to 0
     xor a, a
@@ -521,7 +551,7 @@ PathRow:
 
         push de
 
-        ld d, HIGH(pathLut)
+        ld d, HIGH(PathLut)
 
         ld e, a
 

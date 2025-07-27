@@ -38,7 +38,13 @@ layerRoomTypeProbabillities:
 
 ; Actual functions
 
-initRun::
+; Initializes all data that persists during a single run.
+; This includes initializing health, money, and equipment, as well as generating
+; a random map.
+; Should be called once at the beginning of every run.
+;
+; Saves: none
+InitRun::
     ; Set RNG seed (for testing)
     IF DEF(FIXED_SEED)
         ld a, HIGH(FIXED_SEED)

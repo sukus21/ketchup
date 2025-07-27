@@ -16,7 +16,7 @@ SECTION "MAP VIEW", ROMX
 ; Begin a run and enter mapview.
 ; Does not return.
 BeginRun::
-    farcall_x initRun
+    farcall_x InitRun
     ; Fall through to GameloopMapView
 
 ; Enter mapview.
@@ -36,13 +36,13 @@ GameloopMapview::
 
     ; Offset + Upper limit
     sub a, 32
-    jp nc, :+
-        ld a, 0
+    jr nc, :+
+        xor a, a
     :
 
     ; Lower limit
     cp a, MAP_SCROLL_LIMIT
-    jp c, :+
+    jr c, :+
         ld a, MAP_SCROLL_LIMIT
     :
     ld [hl+], a
@@ -533,6 +533,9 @@ EnterRoom:
     jp farjump
 ;
 
+; VBlank routine for the mapview gameloop.
+;
+; Saves: none
 MapviewVBlank:
     ; Do OAM DMA
     ld a, high(wOAM)
@@ -544,7 +547,7 @@ MapviewVBlank:
     ldh [rSCY], a
 
     ; Set LCD control
-    ld a, $88
+    ld a, LCDCF_ON | LCDCF_BG9C00
     ldh [rLCDC], a
 
     LYC_set_jumppoint EndHud
@@ -575,6 +578,9 @@ MapviewVBlank:
     reti
 ;
 
+; HBlank routine to be called at the bottom of the HUD.
+;
+; Saves: all
 EndHud:
     push af
 
