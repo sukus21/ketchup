@@ -3,6 +3,8 @@ INCLUDE "vqueue/vqueue.inc"
 INCLUDE "macro/lyc.inc"
 INCLUDE "macro/color.inc"
 INCLUDE "macro/memcpy.inc"
+INCLUDE "gamestate/hud_vram.inc"
+
 
 ; The Status Hud is a HUD that can be reused across gameloops.
 ; As the name implies, it displays various information about the
@@ -21,10 +23,6 @@ INCLUDE "macro/memcpy.inc"
 ; of the HUD and can be modified from the outside, allowing the
 ; gameloop to reclaim control of these features for the rest of
 ; the frame.
-
-DEF HUD_BASE_TILE_ID EQU 96
-DEF HUD_BASE_TILE_ROW_ADDRESS EQU _SCRN1 + (32 * 30)
-DEF HUD_BASE_PALETTE_INDEX EQU 6
 
 SECTION "STATUS HUD", ROM0
 
@@ -93,7 +91,7 @@ SECTION "STATUS HUD DATA", ROMX
 
 LoadStatusHud::
     ; Load palettes
-    ld a, HUD_BASE_PALETTE_INDEX * 8
+    ld a, BGPAL_HUD * 8
     ld b, 2
     ld hl, StatusHudPalettes
     call PaletteCopyMultiBG
@@ -102,9 +100,9 @@ LoadStatusHud::
     ld a, 1
     ldh [rVBK], a
 
-    memcpy_label StatusHudTiles, _VRAM9000 + (HUD_BASE_TILE_ID * 16)
+    memcpy_label StatusHudTiles, VT_HUD
 
-    ld hl, _VRAM9000 + ((HUD_BASE_TILE_ID + 31) * 16)
+    ld hl, VT_HUD + (31 * 16)
     xor a, a
     REPT 16
         ld [hl+], a
@@ -114,11 +112,11 @@ LoadStatusHud::
     xor a, a
     ldh [rVBK], a
 
-    ld hl, HUD_BASE_TILE_ROW_ADDRESS
+    ld hl, VM_HUD
 
     ; Border row
     ld c, 5
-    ld a, HUD_BASE_TILE_ID + 5
+    ld a, VTI_HUD_BORDER
     :
         REPT 4
             ld [hl+], a
@@ -141,10 +139,10 @@ LoadStatusHud::
     ld a, 1
     ldh [rVBK], a
     
-    ld hl, HUD_BASE_TILE_ROW_ADDRESS
+    ld hl, VM_HUD
 
     ; Border row
-    ld a, OAMF_BANK1 | (HUD_BASE_PALETTE_INDEX + 1)
+    ld a, OAMF_BANK1 | BGPAL_HUD_DUFFIN_AND_SHADING
     ld c, 5
     :
         REPT 4
@@ -161,7 +159,7 @@ LoadStatusHud::
     ld l, a
 
     ; Info row
-    ld a, OAMF_BANK1 | HUD_BASE_PALETTE_INDEX
+    ld a, OAMF_BANK1 | BGPAL_HUD
     ld c, 2
     :
         REPT 5
@@ -171,7 +169,7 @@ LoadStatusHud::
         dec c
         jr nz, :-
     ;
-    ld a, OAMF_BANK1 | (HUD_BASE_PALETTE_INDEX + 1)
+    ld a, OAMF_BANK1 | BGPAL_HUD_DUFFIN_AND_SHADING
     ld c, 2
     :
         REPT 5
@@ -190,7 +188,7 @@ LoadStatusHud::
 ;
 ; Saves: none
 UpdateStatusHud::
-    ld hl, _SCRN1 + 32
+    ld hl, VM_HUD + 32
 
     xor a, a
     ldh [rVBK], a
@@ -220,24 +218,24 @@ FillHudInfo:
         ld [hl+], a
         
         ; Character icon
-        ld a, HUD_BASE_TILE_ID + I
+        ld a, VTI_HUD + I
         ld [hl+], a
         
         ; "HP:"
-        ld a, HUD_BASE_TILE_ID + 3
+        ld a, VTI_HUD_HP
         ld [hl+], a
 
         ; Tens' digit
         ld a, [bc]
         swap a
         and a, $0F
-        add a, HUD_BASE_TILE_ID + 6
+        add a, VTI_HUD_NUMBERS
         ld [hl+], a
 
         ; Ones' digit
         ld a, [bc]
         and a, $0F
-        add a, HUD_BASE_TILE_ID + 6
+        add a, VTI_HUD_NUMBERS
         ld [hl+], a
 
         ; Advance
@@ -251,12 +249,12 @@ FillHudInfo:
     ; Show money
 
     ; "$:"
-    ld a, HUD_BASE_TILE_ID + 4
+    ld a, VTI_HUD_DOLLAR
     ld [hl+], a
 
     ; Houndreds' digit
     ld a, [bc]
-    add a, HUD_BASE_TILE_ID + 6
+    add a, VTI_HUD_NUMBERS
     ld [hl+], a
     
     inc c
@@ -265,13 +263,13 @@ FillHudInfo:
     ld a, [bc]
     swap a
     and a, $0F
-    add a, HUD_BASE_TILE_ID + 6
+    add a, VTI_HUD_NUMBERS
     ld [hl+], a
 
     ; Ones' digit
     ld a, [bc]
     and a, $0F
-    add a, HUD_BASE_TILE_ID + 6
+    add a, VTI_HUD_NUMBERS
     ld [hl+], a
 
     ; Final margin tile
