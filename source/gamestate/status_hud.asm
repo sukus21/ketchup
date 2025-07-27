@@ -26,6 +26,12 @@ INCLUDE "gamestate/hud_vram.inc"
 
 SECTION "STATUS HUD", ROM0
 
+; Begin displaying the HUD.  
+; Should be called from a VBlank handler.  
+; Modifies `rSTAT`, `rLCDC` and interrupt registers.  
+; Lives in ROM0.
+;
+; Destroys: all
 DisplayHud::
     ; Set scroll
     ld a, -12
@@ -55,6 +61,11 @@ DisplayHud::
     ret
 ;
 
+
+
+; Save a row of tiles on SCRN1 by warping the tileset.
+; This is SO nasty, but I (sukus) love it!  
+; Lives in ROM0.
 LyEdge:
     push af
 
@@ -67,28 +78,26 @@ LyEdge:
     ld a, -28
     ldh [rSCY], a ; This barely makes it in time.
 
-    push hl
-
     ld a, 15
     ldh [rLYC], a
 
-    ld hl, wStatusHudConfig.endOfHudHandler
-    ld a, [hl+]
+    ld a, [wStatusHudConfig.endOfHudHandler + 0]
     ldh [hLYC + 1], a
-    ld a, [hl]
+    ld a, [wStatusHudConfig.endOfHudHandler + 1]
     ldh [hLYC + 2], a
 
-    xor a, a
-    ldh [rIF], a
-
-    pop hl
     pop af
     reti 
 ;
 
 
+
 SECTION "STATUS HUD DATA", ROMX
 
+; VQueue routine for loading elements associated with the HUD.  
+; Assumes VRAM + palette access.
+;
+; Destroys: all
 LoadStatusHud::
     ; Load palettes
     ld a, BGPAL_HUD * 8
@@ -299,6 +308,9 @@ StatusHudTiles:
 .end
 
 SECTION "STATUS HUD CONFIG", WRAM0
+
+; Different variables, controlling the state of the HUD.
+; See sublabels for more information.
 wStatusHudConfig::
     ; Pointer to the interrupt handler to be called on the
     ; final scanline of the HUD.
