@@ -530,7 +530,7 @@ EnterRoom:
     ld a, b
 
     ; LESGOOO!!!
-    jp farjump
+    jp Farjump
 ;
 
 ; VBlank routine for the mapview gameloop.
@@ -622,11 +622,6 @@ CursorSprite:
     db $02, OAMF_XFLIP
 ;
 
-MACRO pointer24
-    db BANK(\1)
-    dw \1
-ENDM
-
 RoomTypeJumpTable:
     pointer24 InvalidRoomType ; GAMESTATE_ROOM_TYPE_INACCESSIBLE
     pointer24 GameloopBattle ; GAMESTATE_ROOM_TYPE_BOSS
@@ -640,19 +635,6 @@ RoomTypeJumpTable:
 
 InvalidRoomType:
     rst VecError
-;
-
-SECTION "VARIABLE FARJUMP", ROM0
-; Switch banks and jump to the specified destination.
-; 
-; Input:
-; - `a`: Bank
-; - `hl`: Address
-;
-; Saves: all
-farjump:
-    ld [$2000], a
-    jp hl
 ;
 
 SECTION "GAMELOOP MAPVIEW VARIABLES", WRAM0

@@ -118,6 +118,22 @@ FarcallHandlerX::
 
 
 
+; Switches ROM bank and performs a one-way jump to the given address.
+; Can be used with `farjump` macro in `macro/farcall.inc`.
+; Lives in ROM0.
+;
+; Input:
+; - `a`: Bank to switch to
+; - `hl`: Address in bank
+;
+; Saves: all
+Farjump::
+    ld [rROMB0], a
+    jp hl
+;
+
+
+
 SECTION "FARCALL VARIABLES", HRAM
 
     ; Which ROM-bank is currently switched in.
