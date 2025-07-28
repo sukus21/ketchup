@@ -1,6 +1,7 @@
 INCLUDE "hardware.inc/hardware.inc"
 INCLUDE "macro/color.inc"
 INCLUDE "macro/memcpy.inc"
+INCLUDE "macro/farcall.inc"
 
 SECTION "MAPVIEW DATA", ROMX, ALIGN[8]
 
@@ -92,7 +93,7 @@ GameloopMapviewInitTransfer::
     ; Load palettes
     ld hl, Pallete
     xor a
-    REPT 6
+    REPT 2
         call PaletteCopyBG
     ENDR
 
@@ -148,201 +149,7 @@ GameloopMapviewInitTransfer::
     call EmptyRow
 
     ; Render HUD
-    ld hl, _SCRN1
-    
-    xor a, a
-    ldh [rVBK], a
-
-    ; Top row
-    ld c, 5
-    :
-        REPT 4
-            ld [hl+], a
-        ENDR
-
-        dec c
-        jr nz, :-
-    ;
-    ld [hl+], a
-
-    ld a, l
-    add a, 11
-    ld l, a
-
-    ; Middle row
-    call FillHudInfo
-
-    ld a, l
-    add a, 11
-    ld l, a
-
-    ; Bottom row
-    ld a, 40
-    ld c, 5
-    :
-        REPT 4
-            ld [hl+], a
-        ENDR
-
-        dec c
-        jr nz, :-
-    ;
-    ld [hl+], a
-
-    ; Attributes
-
-    ld a, 1
-    ldh [rVBK], a
-    
-    ld hl, _SCRN1
-
-    ; Top row
-    ld a, 4
-    ld c, 5
-    :
-        REPT 4
-            ld [hl+], a
-        ENDR
-
-        dec c
-        jr nz, :-
-    ;
-    ld [hl+], a
-
-    ld a, l
-    add a, 11
-    ld l, a
-
-    ; Middle row
-    ld a, 4
-    ld c, 2
-    :
-        REPT 5
-            ld [hl+], a
-        ENDR
-
-        dec c
-        jr nz, :-
-    ;
-    ld a, 5
-    ld c, 2
-    :
-        REPT 5
-            ld [hl+], a
-        ENDR
-
-        dec c
-        jr nz, :-
-    ;
-    ld [hl+], a
-
-    ld a, l
-    add a, 11
-    ld l, a
-
-    ; Bottom row
-    ld a, 5
-    ld c, 5
-    :
-        REPT 4
-            ld [hl+], a
-        ENDR
-
-        dec c
-        jr nz, :-
-    ;
-    ld [hl+], a
-
-    ret
-
-; Updates the HUD with current health and money.
-;
-; Saves: none
-UpdateStatusHud::
-    ld hl, _SCRN1 + 32
-
-    xor a, a
-    ldh [rVBK], a
-    
-    ; Fall through to FillHudInfo
-
-; Generates the second row of tiles in the HUD. That is the row
-; displaying the actual information shown in the HUD.
-;
-; Input:
-; - hl: Pointer to the start of the row being filled
-;
-; Returns:
-; - hl: Increased by 21
-; 
-; Saves: none
-FillHudInfo:
-    ld bc, wGameStateCharacterHealth
-
-    ; Character health
-    FOR I, 3
-        ; Margin/Padding
-        xor a, a
-        ld [hl+], a
-        
-        ; Character icon
-        ld a, 35 + I
-        ld [hl+], a
-        
-        ; "HP:"
-        ld a, 38
-        ld [hl+], a
-
-        ; Tens' digit
-        ld a, [bc]
-        swap a
-        and a, $0F
-        add a, 41
-        ld [hl+], a
-
-        ; Ones' digit
-        ld a, [bc]
-        and a, $0F
-        add a, 41
-        ld [hl+], a
-
-        ; Advance
-        inc c
-    ENDR
-
-    ; Padding
-    xor a, a
-    ld [hl+], a
-
-    ; Show money
-
-    ; "$:"
-    ld a, 39
-    ld [hl+], a
-
-    ; Houndreds' digit
-    ld a, [bc]
-    add a, 41
-    ld [hl+], a
-    
-    inc c
-
-    ; Tens' digit
-    ld a, [bc]
-    swap a
-    and a, $0F
-    add a, 41
-    ld [hl+], a
-
-    ; Ones' digit
-    ld a, [bc]
-    and a, $0F
-    add a, 41
-    ld [hl+], a
-
-    ; Final margin tile
-    xor a, a
-    ld [hl+], a
+    farcall_x LoadStatusHud
 
     ret
 
@@ -627,8 +434,6 @@ TilesetGridTiles:
     .empty: ds 16, 0
     .room_icons: INCBIN "gameloop/mapview/room_icons.2bpp"
     .paths: INCBIN "gameloop/mapview/paths.2bpp"
-    .char_icons: INCBIN "gameloop/mapview/char_icons.2bpp"
-    .numbers: INCBIN "gameloop/mapview/numbers.2bpp"
 .end
 
 SpriteTiles:
@@ -647,30 +452,6 @@ Pallete:
     color_rgb8 $00, $00, $10
     color_rgb8 $80, $72, $1a
     color_rgb8 $d3, $ca, $00
-
-    ; Select path A
-    color_rgb8 $40, $38, $30
-    color_rgb8 $00, $00, $10
-    color_rgb8 $40, $C0, $90
-    color_rgb8 $50, $F0, $A0
-
-    ; Select path B
-    color_rgb8 $40, $38, $30
-    color_rgb8 $00, $00, $10
-    color_rgb8 $50, $F0, $A0
-    color_rgb8 $40, $C0, $90
-
-    ; Menu with Green and Blue
-    color_rgb8 $30, $4A, $58
-    color_rgb8 $00, $00, $00
-    color_rgb8 $20, $F0, $30
-    color_rgb8 $40, $10, $E0
-
-    ; Menu with Red and Shade
-    color_rgb8 $30, $4A, $58
-    color_rgb8 $00, $00, $00
-    color_rgb8 $F0, $10, $10
-    color_rgb8 $20, $2A, $38
 ;
 
 SpritePalette:
