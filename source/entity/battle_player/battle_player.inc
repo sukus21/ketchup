@@ -25,8 +25,7 @@ DEF ENTVAR_PLAYER_X RB 2
 ; Not the logical position on the grid, just for animations and stuff.
 DEF ENTVAR_PLAYER_Y RB 2
 
-; 0 for Duffin, 1 for Menja, 2 for Herbert
-; TODO: enum
+; Entry in CHARID enum.
 DEF ENTVAR_PLAYER_CHARID RB 1
 
 

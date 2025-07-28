@@ -99,11 +99,11 @@ SECTION "BATTLE HELPER FUNCTIONS", ROM0
         push hl
 
         ; Check overlap
-        ld hl, wBattleStatsDuffin
+        ld hl, wBattleStatsHerbert
         call .helper
         ld hl, wBattleStatsMenja
         call nz, .helper
-        ld hl, wBattleStatsHerbert
+        ld hl, wBattleStatsDuffin
         call nz, .helper
 
         ; Return

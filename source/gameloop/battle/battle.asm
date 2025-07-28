@@ -44,13 +44,13 @@ GameloopBattle::
     call EntsysInit
 
     ; Initialize player characters
-    ld hl, wBattleStatsDuffin + BATTLE_STATS_X
-    ld a, 0
+    ld hl, wBattleStatsHerbert + BATTLE_STATS_X
+    ld a, 2
     ld [hl+], a
     add a, 2
     ld [hl+], a
-    ld bc, wBattleStatsDuffin
-    ld d, CHARID_DUFFIN
+    ld bc, wBattleStatsHerbert
+    ld d, CHARID_HERBERT
     farcall_x EntityBattlePlayerCreate
 
     ld hl, wBattleStatsMenja + BATTLE_STATS_X
@@ -62,13 +62,13 @@ GameloopBattle::
     ld d, CHARID_MENJA
     farcall_x EntityBattlePlayerCreate
 
-    ld hl, wBattleStatsHerbert + BATTLE_STATS_X
-    ld a, 2
+    ld hl, wBattleStatsDuffin + BATTLE_STATS_X
+    ld a, 0
     ld [hl+], a
     add a, 2
     ld [hl+], a
-    ld bc, wBattleStatsHerbert
-    ld d, CHARID_HERBERT
+    ld bc, wBattleStatsDuffin
+    ld d, CHARID_DUFFIN
     farcall_x EntityBattlePlayerCreate
 
     ; Transfer the required assets to VRAM
@@ -208,9 +208,9 @@ SECTION "BATTLE STATS", WRAM0, ALIGN[3]
     ; Contains the battle state for player characters and enemies.
     wBattleStats::
 
-    wBattleStatsDuffin:: ds BATTLE_STATS_T
-    wBattleStatsMenja:: ds BATTLE_STATS_T
     wBattleStatsHerbert:: ds BATTLE_STATS_T
+    wBattleStatsMenja:: ds BATTLE_STATS_T
+    wBattleStatsDuffin:: ds BATTLE_STATS_T
 
     wBattleStatsEnemy1:: ds BATTLE_STATS_T
     wBattleStatsEnemy2:: ds BATTLE_STATS_T

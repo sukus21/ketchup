@@ -9,16 +9,16 @@ INCLUDE "struct/battle_stats.inc"
 SECTION "ENTITY BATTLE PLAYER DATA", ROMX
 
     ; Character palettes
-    PalDuffin: INCBIN "entity/battle_player/sprites/duffin.gbc"
-    PalMenja: INCBIN "entity/battle_player/sprites/menja.gbc"
     PalHerbert: INCBIN "entity/battle_player/sprites/herbert.gbc"
+    PalMenja: INCBIN "entity/battle_player/sprites/menja.gbc"
+    PalDuffin: INCBIN "entity/battle_player/sprites/duffin.gbc"
 
     ; Idle sprites, always loaded
-    SprDuffinIdle: INCBIN "entity/battle_player/sprites/duffin_idle.2bpp"
+    SprHerbertIdle: INCBIN "entity/battle_player/sprites/herbert_idle.2bpp"
     .end
     SprMenjaIdle: INCBIN "entity/battle_player/sprites/menja_idle.2bpp"
     .end
-    SprHerbertIdle: INCBIN "entity/battle_player/sprites/herbert_idle.2bpp"
+    SprDuffinIdle: INCBIN "entity/battle_player/sprites/duffin_idle.2bpp"
     .end
 
 
@@ -34,19 +34,19 @@ SECTION "ENTITY BATTLE PLAYER DATA", ROMX
         ldh [rVBK], a
 
         ; Copy sprites over
-        memcpy_label SprDuffinIdle, VT_BATTLE_DUFFIN_IDLE
-        memcpy_label SprMenjaIdle, VT_BATTLE_MENJA_IDLE
         memcpy_label SprHerbertIdle, VT_BATTLE_HERBERT_IDLE
+        memcpy_label SprMenjaIdle, VT_BATTLE_MENJA_IDLE
+        memcpy_label SprDuffinIdle, VT_BATTLE_DUFFIN_IDLE
 
         ; Copy palettes over
-        ld hl, PalDuffin
-        ld a, OBJPAL_BATTLE_DUFFIN * 8
+        ld hl, PalHerbert
+        ld a, OBJPAL_BATTLE_HERBERT * 8
         call PaletteCopyOBJ
         ld hl, PalMenja
         ld a, OBJPAL_BATTLE_MENJA * 8
         call PaletteCopyOBJ
-        ld hl, PalHerbert
-        ld a, OBJPAL_BATTLE_HERBERT * 8
+        ld hl, PalDuffin
+        ld a, OBJPAL_BATTLE_DUFFIN * 8
         call PaletteCopyOBJ
 
         ; Ok, done
@@ -234,15 +234,17 @@ SECTION "ENTITY BATTLE PLAYER", ROMX
 
     ; Idle animation pointers for all characters.
     TmplsIdle:
-        dw TmplDuffinIdle
-        dw TmplMenjaIdle
         dw TmplHerbertIdle
+        dw TmplMenjaIdle
+        dw TmplDuffinIdle
     ;
 
-    ; Duffins idle pose
-    TmplDuffinIdle:: db %0000_0110
-        db VTI_BATTLE_DUFFIN_IDLE + $00, OBJPAL_BATTLE_DUFFIN, 
-        db VTI_BATTLE_DUFFIN_IDLE + $02, OBJPAL_BATTLE_DUFFIN
+    ; Herberts idle pose
+    TmplHerbertIdle:: db %0110_0110
+        db VTI_BATTLE_HERBERT_IDLE + $00, OBJPAL_BATTLE_HERBERT
+        db VTI_BATTLE_HERBERT_IDLE + $04, OBJPAL_BATTLE_HERBERT
+        db VTI_BATTLE_HERBERT_IDLE + $02, OBJPAL_BATTLE_HERBERT
+        db VTI_BATTLE_HERBERT_IDLE + $06, OBJPAL_BATTLE_HERBERT
     ;
 
     ; Menjas idle pose
@@ -253,12 +255,10 @@ SECTION "ENTITY BATTLE PLAYER", ROMX
         db VTI_BATTLE_MENJA_IDLE + $06, OBJPAL_BATTLE_MENJA
     ;
 
-    ; Herberts idle pose
-    TmplHerbertIdle:: db %0110_0110
-        db VTI_BATTLE_HERBERT_IDLE + $00, OBJPAL_BATTLE_HERBERT
-        db VTI_BATTLE_HERBERT_IDLE + $04, OBJPAL_BATTLE_HERBERT
-        db VTI_BATTLE_HERBERT_IDLE + $02, OBJPAL_BATTLE_HERBERT
-        db VTI_BATTLE_HERBERT_IDLE + $06, OBJPAL_BATTLE_HERBERT
+    ; Duffins idle pose
+    TmplDuffinIdle:: db %0000_0110
+        db VTI_BATTLE_DUFFIN_IDLE + $00, OBJPAL_BATTLE_DUFFIN, 
+        db VTI_BATTLE_DUFFIN_IDLE + $02, OBJPAL_BATTLE_DUFFIN
     ;
 
 ENDSECTION
