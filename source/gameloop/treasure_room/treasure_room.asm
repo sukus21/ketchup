@@ -65,6 +65,11 @@ GameloopTreasureRoom::
     ld de, 40
     call Memcpy
 
+    ld hl, wStatusHudConfig.endOfHudHandler
+    ld a, LOW(TreasureRoomHudEnd)
+    ld [hl+], a
+    ld [hl], HIGH(TreasureRoomHudEnd)
+
     ; Clear OAM mirror
     ld bc, $00_10
     ld hl, wOAM
@@ -143,24 +148,13 @@ GameloopTreasureRoom::
         ld a, high(wOAM)
         call hDMA
 
-        xor a, a
-        ldh [rSCY], a
+        call DisplayHud
+
         ld a, -48
         ldh [hTreasureRoomVars.scanlineOffset], a
 
         ld a, [wTreasureRoomVars.currBuffer]
         ldh [hTreasureRoomVars.bufferOffset], a
-
-        ld a, LCDCF_ON | LCDCF_OBJON | LCDCF_OBJ16
-        ldh [rLCDC], a
-
-        ld a, 5 * 8 - 1
-        ldh [rLYC], a
-
-        ld a, STATF_LYC
-        ldh [rSTAT], a
-
-        LYC_set_jumppoint TreasureRoomChestTop
 
         ei
 
@@ -226,6 +220,30 @@ AdvanceChestAnim:
 ;
 
 SECTION "TREASURE ROOM INTERRUPTS", ROM0
+
+TreasureRoomHudEnd:
+    push af
+
+    LYC_set_jumppoint TreasureRoomChestTop
+
+    LYC_wait_hblank
+
+    xor a, a
+    ldh [rSCY], a
+    ldh [rSCX], a
+
+    ld a, LCDCF_ON | LCDCF_OBJON | LCDCF_OBJ16
+    ldh [rLCDC], a
+
+    ld a, 5 * 8 - 1
+    ldh [rLYC], a
+
+    ld a, STATF_LYC
+    ldh [rSTAT], a
+
+    pop af
+    reti
+;
 
 TreasureRoomChestTop:
     push af
