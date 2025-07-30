@@ -29,6 +29,10 @@ GameloopBattle::
         ld [hl+], a
     ENDR
 
+    ; Initialize state
+    ld a, BATTLE_STATE_MOVEMENT
+    ld [wBattleState], a
+
     ; Initialize battle states
     ; TODO: HP should be carried over from somewhere else
     ld hl, wBattleStats
@@ -185,22 +189,26 @@ MoveWindow:
 
 SECTION "GAMELOOP BATTLE VARIABLES", WRAM0
 
-; X-position of the top part of the menu
-wBattleMenuX:: ds 1
-wBattleMenuXTarget:: ds 1
+    ; X-position of the top part of the menu
+    wBattleMenuX:: ds 1
+    wBattleMenuXTarget:: ds 1
 
-; X-position 
-wBattleDetailsX:: ds 1
-wBattleDetailsXTarget:: ds 1
+    ; X-position 
+    wBattleDetailsX:: ds 1
+    wBattleDetailsXTarget:: ds 1
 
-; Determines if battle menu is ready to be shown.
-wBattleMenuReady:: ds 1
+    ; Determines if battle menu is ready to be shown.
+    wBattleMenuReady:: ds 1
 
-; Camera X-position
-wBattleCameraX:: ds 2
+    ; Camera X-position
+    wBattleCameraX:: ds 2
 
-; Camera Y-position
-wBattleCameraY:: ds 2
+    ; Camera Y-position
+    wBattleCameraY:: ds 2
+
+    ; Current state of battle
+    wBattleState:: ds 1
+ENDSECTION
 
 
 SECTION "BATTLE STATS", WRAM0, ALIGN[3]
