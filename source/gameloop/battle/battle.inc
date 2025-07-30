@@ -2,6 +2,8 @@
     DEF GAMELOOP_BATTLE_INC EQU 1
 
 INCLUDE "gameloop/battle/vram.inc"
+INCLUDE "struct/battle_stats.inc"
+
 
 ; X-position for when the window is out of frame
 DEF BATTLE_WINDOW_X_CLOSED EQU 159 + 7
@@ -44,5 +46,34 @@ DEF BATTLE_STATE_DEFEAT RB 1
 
 ; Player wins
 DEF BATTLE_STATE_VICTORY RB 1
+
+
+
+; Converts a character ID to a `BATTLE_STATS_T` pointer.
+;
+; Input:
+; - `a`: `CHARID` item
+; - `1`: Pointer destination (r16)
+; - `2*`: Offset to low-pointer (n8, optional)
+;
+; Returns:
+; - Register `1`: `BATTLE_STATS_T` pointer
+;
+; Destroys: `af`
+MACRO battle_charid_to_statptr
+    STATIC_ASSERT BATTLE_STATS_T == 8
+    add a, a
+    add a, a
+    add a, a
+    IF _NARG == 2
+        add a, low(wBattleStats) + \2
+    ELSE
+        add a, low(wBattleStats)
+    ENDC
+    ld low(\1), a
+    xor a
+    adc a, high(wBattleStats)
+    ld high(\1), a
+ENDM
 
     ENDC

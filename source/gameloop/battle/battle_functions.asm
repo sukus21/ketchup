@@ -1,3 +1,4 @@
+INCLUDE "gameloop/battle/battle.inc"
 INCLUDE "struct/battle_stats.inc"
 INCLUDE "macro/relpointer.inc"
 
@@ -130,6 +131,98 @@ SECTION "BATTLE HELPER FUNCTIONS", ROM0
             sub a, [hl]
             relpointer_destroy
             ret
+        ;
+    ;
+
+
+
+    ; Insert a character ID into the turn order.  
+    ; Lives in ROM0.
+    ;
+    ; Input:
+    ; - `a`: `CHARID` item
+    BattleAddToQueue::
+        ld c, a
+        call BattleRemoveFromQueue
+
+        ; Get this actors delay -> B
+        ld a, c
+        battle_charid_to_statptr hl, BATTLE_STATS_ACTION_DELAY
+        ld b, [hl]
+
+        ; Loop through current queue to find existing entry
+        ld de, wBattleTurnOrder
+        .loop
+            ld a, [de]
+            inc a ; cp a, $FF
+            jr z, .found
+            dec a
+
+            ; If new entry has lower delay, insert here
+            battle_charid_to_statptr hl, BATTLE_STATS_ACTION_DELAY
+            ld a, c
+            cp a, [hl]
+            jr c, .found
+
+            ; Nope, try the next entry
+            inc de
+            jr .loop
+        ;
+
+        ; We found an entry!
+        .found
+        ld h, d
+        ld l, e
+
+        ; Replace things
+        .foundLoop
+            ld b, [hl]
+            ld a, c
+            ld [hl+], a
+
+            ld c, b
+            inc b ; cp b, $FF
+            jr nz, .foundLoop
+            ret
+        ;
+    ;
+
+
+
+    ; Removes a character from the turn order.
+    ; If character is not in the turn order, nothing happens.  
+    ; Lives in ROM0.
+    ;
+    ; Input:
+    ; - `a`: `CHARID` item
+    ;
+    ; Destroys: `hl`, `af`, `b`  
+    ; Saves: `c`, `de`
+    BattleRemoveFromQueue::
+        ld b, a
+        ld hl, wBattleTurnOrder
+
+        ; Find entry matching
+        .loop
+            ld a, [hl+]
+            cp a, b
+            jr z, .found
+
+            ; Loop if ID != $FF
+            inc a
+            jr nz, .loop
+            ret
+        ;
+
+        ; Move queue entries forwards until $FF is hit
+        .found
+            ld a, [hl-]
+            ld [hl+], a
+            inc a
+            ret z
+
+            inc hl
+            jr .found
         ;
     ;
 

@@ -39,6 +39,13 @@ GameloopBattle::
     ld bc, $00_18
     call MemsetShort
 
+    ; Set initial turn order
+    ld hl, wBattleTurnOrder
+    ld a, $FF
+    REPT 6
+        ld [hl+], a
+    ENDR
+
     ; Clear OAM mirror
     ld h, high(wOAM)
     call SpriteInit
@@ -49,7 +56,7 @@ GameloopBattle::
 
     ; Initialize player characters
     ld hl, wBattleStatsHerbert + BATTLE_STATS_X
-    ld a, 2
+    ld a, 0
     ld [hl+], a
     add a, 2
     ld [hl+], a
@@ -67,13 +74,22 @@ GameloopBattle::
     farcall_x EntityBattlePlayerCreate
 
     ld hl, wBattleStatsDuffin + BATTLE_STATS_X
-    ld a, 0
+    ld a, 2
     ld [hl+], a
     add a, 2
     ld [hl+], a
     ld bc, wBattleStatsDuffin
     ld d, CHARID_DUFFIN
     farcall_x EntityBattlePlayerCreate
+
+    ; Add these guys to the queue
+    ; TODO: allow player to define the order
+    ld a, CHARID_DUFFIN
+    call BattleAddToQueue
+    ld a, CHARID_HERBERT
+    call BattleAddToQueue
+    ld a, CHARID_MENJA
+    call BattleAddToQueue
 
     ; Transfer the required assets to VRAM
     vqueue_enqueue GameloopBattleInitTransfer
@@ -208,6 +224,10 @@ SECTION "GAMELOOP BATTLE VARIABLES", WRAM0
 
     ; Current state of battle
     wBattleState:: ds 1
+
+    ; Indices into `wBattleStats`, or $FF for none
+    wBattleTurnOrder:: ds 5
+        .terminator ds 1
 ENDSECTION
 
 
