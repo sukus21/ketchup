@@ -200,8 +200,7 @@ Main::
     ldh [rLCDC], a
     
     ; Go to gameloop
-    ;farjump BeginRun
-    farjump GameloopTreasureRoom
+    farjump BeginRun
 ;
 
 

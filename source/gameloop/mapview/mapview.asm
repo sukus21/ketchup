@@ -598,7 +598,7 @@ CursorSprite:
 RoomTypeJumpTable:
     pointer24 InvalidRoomType ; GAMESTATE_ROOM_TYPE_INACCESSIBLE
     pointer24 GameloopBattle ; GAMESTATE_ROOM_TYPE_BOSS
-    pointer24 GameloopMapview ; GAMESTATE_ROOM_TYPE_TREASURE
+    pointer24 GameloopTreasureRoom ; GAMESTATE_ROOM_TYPE_TREASURE
     pointer24 GameloopMapview ; GAMESTATE_ROOM_TYPE_SECRET
     pointer24 GameloopMapview ; GAMESTATE_ROOM_TYPE_CAMP
     pointer24 GameloopMapview ; GAMESTATE_ROOM_TYPE_MERCHANT
