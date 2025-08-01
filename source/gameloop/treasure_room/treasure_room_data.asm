@@ -23,46 +23,11 @@ GameloopTreasureRoomInitTransfer::
     xor a, a
     call PaletteCopyOBJ
 
-    ; Draw wall
-    ld bc, $1204
-    ld de, 12
+    ; Fill background with empty tiles
     ld hl, _SCRN0
-    ld a, 0
-
-    :
-        REPT 5
-            ld [hl+], a
-        ENDR
-        
-        dec c
-        jr nz, :-
-
-        add hl, de
-        ld c, 4
-        dec b
-        jr nz, :-
-    ;
-
-    ld bc, $1204
-    ld de, 12
-    ld hl, _SCRN0
-    ld a, 1
-    ldh [rVBK], a
-    xor a, a
-
-    :
-        REPT 5
-            ld [hl+], a
-        ENDR
-        
-        dec c
-        jr nz, :-
-
-        add hl, de
-        ld c, 4
-        dec b
-        jr nz, :-
-    ;
+    ld bc, 0
+    ld de, $1214
+    call FillBgArea
 
     ; Draw treasure chest
 
@@ -169,7 +134,74 @@ DrawBgStamp::
 
         jr nc, .attribLoop
         inc h
-        jp .attribLoop
+        jr .attribLoop
+    ;
+;
+
+FillBgArea:
+    push hl
+    push de
+
+    xor a, a
+    ldh [rVBK], a
+
+    ld a, e
+    ldh [hFillBgAreaLocals.width], a
+
+    ld a, b
+    :
+        ld [hl+], a
+
+        dec e
+        jr nz, :-
+
+        dec d
+        jr z, :+
+
+        ldh a, [hFillBgAreaLocals.width]
+        ld e, a
+
+        ld a, l
+        sub a, e
+        add a, 32
+        ld l, a
+
+        ld a, b
+
+        jr nc, :-
+        inc h
+        jr :-
+    :
+
+    ld a, 1
+    ldh [rVBK], a
+
+    pop de
+    pop hl
+
+    ld a, c
+    :
+        ld [hl+], a
+
+        dec e
+        jr nz, :-
+
+        dec d
+        ret z
+
+        ldh a, [hFillBgAreaLocals.width]
+        ld e, a
+
+        ld a, l
+        sub a, e
+        add a, 32
+        ld l, a
+
+        ld a, c
+
+        jr nc, :-
+        inc h
+        jr :-
     ;
 ;
 
@@ -218,5 +250,10 @@ BgTileMap:
 
 SECTION UNION "LOCALVARS", HRAM
 hDrawBgStampLocals:
+    .width: ds 1
+.end
+
+SECTION UNION "LOCALVARS", HRAM
+hFillBgAreaLocals:
     .width: ds 1
 .end
