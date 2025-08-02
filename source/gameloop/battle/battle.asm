@@ -30,8 +30,7 @@ GameloopBattle::
     ENDR
 
     ; Initialize state
-    ld a, BATTLE_STATE_MOVEMENT
-    ld [wBattleState], a
+    farcall_x BattleChangeStateCountdown
 
     ; Initialize battle states
     ; TODO: HP should be carried over from somewhere else
@@ -103,6 +102,7 @@ GameloopBattle::
     .loop
         ; Do things on the CPU
         call ReadInput
+        farcall_x BattleStep
         farcall_x EntsysStep
         call UpdateWindowTarget
         call MoveWindow
@@ -224,6 +224,13 @@ SECTION "GAMELOOP BATTLE VARIABLES", WRAM0
 
     ; Current state of battle
     wBattleState:: ds 1
+
+    ; `CHARID` of character currently performing an action
+    wBattleCurrentChar:: ds 1
+
+    ; Timer used by different battle states.
+    ; Exact usages depends on individual states.
+    wBattleTimer:: ds 1
 
     ; Indices into `wBattleStats`, or $FF for none
     wBattleTurnOrder:: ds 5
