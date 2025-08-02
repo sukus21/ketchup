@@ -16,17 +16,22 @@ SECTION "SNIPPETS", ROM0
 ;
 ; Destroys: `af`, `de`
 Memcpy::
+    ; Make it so we get zero flags when carry would've otherwise occured
+    inc e
+    inc d
 
-    ; Copy the data
-    ld a, [bc]
-    ld [hl+], a
-    inc bc
-    dec de
+    :
+        ; Copy the data
+        ld a, [bc]
+        ld [hl+], a
+        inc bc
 
-    ; Check byte count
-    ld a, d
-    or e
-    jr nz, Memcpy
+        ; Decrement counter
+        dec e
+        jr nz, :-
+        dec d
+        jr nz, :-
+    ;
 
     ; Return
     ret 
@@ -113,16 +118,24 @@ MemcpyShort::
 ;
 ; Destroys: `af`
 Memset::
-
-    ; Fill data
+    ; Compatibillity (Can be removed by rearranging parameters at all call sites)
     ld a, b
-    ld [hl+], a
-    dec de
 
-    ; Check byte count
-    ld a, d
-    or e
-    jr nz, Memset
+    ; Make it so we get zero flags when carry would've otherwise occured
+    inc e
+    inc d
+
+    ; Loop
+    :
+        ; Fill
+        ld [hl+], a
+
+        ; Decrement counter
+        dec e
+        jr nz, :-
+        dec d
+        jr nz, :-
+    ;
 
     ; Return
     ret
