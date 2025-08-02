@@ -217,49 +217,6 @@ Strcomp::
 
 
 
-; Literally just jumps to the address of HL.  
-; Lives in ROM0.
-; 
-; Input:
-; - `hl`: Address to jump to
-; 
-; Destroys: unknown
-_hl_::
-    jp hl
-;
-
-
-
-; Jumps to the address of BC.  
-; Avoid using this if possible, only exists for completeness.  
-; Lives in ROM0.
-;
-; Input:
-; - `bc`: Address to jump to
-;
-; Destroys: unknown
-_bc_::
-    push bc
-    ret 
-;
-
-
-
-; Jumps to the address of DE.  
-; Avoid using this if possible, only exists for completeness.  
-; Lives in ROM0.
-;
-; Input:
-; - `de`: Address to jump to
-;
-; Destroys: unknown
-_de_::
-    push de
-    ret 
-;
-
-
-
 ; Stalls until it reaches the desired scanline.
 ; Returns in HBLANK the scanline before.  
 ; Does not use interrupts.  

@@ -65,6 +65,22 @@ VecTimer::
 
 
 
+SECTION "RST $0030", ROM0[$0030]
+
+; Literally just jumps to the address of HL.  
+; Should be called using an `rst` instruction. 
+; Lives in ROM0.
+; 
+; Input:
+; - `hl`: Address to jump to
+; 
+; Destroys: unknown
+VecHL::
+    jp hl
+;
+
+
+
 SECTION "METADATA", ROM0
 
 ; Contains information about the current build.  

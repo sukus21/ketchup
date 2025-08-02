@@ -33,7 +33,7 @@ EntsysStep::
             ld a, [hl+] ; Step function pointer
             ld h, [hl]
             ld l, a
-            call _hl_
+            rst VecHL
             .exited
             pop hl
         ;

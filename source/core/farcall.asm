@@ -49,7 +49,7 @@ FarcallX::
     ld [rROMB0], a
 
     ; Jump
-    call _hl_
+    rst VecHL
 
     ; Returning after jump, reset bank number
     pop af
@@ -84,7 +84,7 @@ FarcallXD::
     ld [rROMB0], a
 
     ; Jump
-    call _hl_
+    rst VecHL
 
     ; Returning after jump, reset banks
     pop af
@@ -110,7 +110,7 @@ FarcallHandlerX::
     ld [rROMB0], a
     ldh a, [hBankNumber]
     push af
-    call _hl_
+    rst VecHL
     pop af
     ld [rROMB0], a
     ret
