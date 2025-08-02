@@ -17,7 +17,6 @@ SECTION "SNIPPETS", ROM0
 ; Destroys: `af`, `de`
 Memcpy::
     ; Make it so we get zero flags when carry would've otherwise occured
-    inc e
     inc d
 
     :
@@ -122,7 +121,6 @@ Memset::
     ld a, b
 
     ; Make it so we get zero flags when carry would've otherwise occured
-    inc e
     inc d
 
     ; Loop
