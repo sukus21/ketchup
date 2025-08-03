@@ -44,6 +44,7 @@ GameloopBattle::
     REPT 6
         ld [hl+], a
     ENDR
+    ld [wBattleCurrentChar], a
 
     ; Clear OAM mirror
     ld h, high(wOAM)

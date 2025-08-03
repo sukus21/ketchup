@@ -1,5 +1,6 @@
 INCLUDE "gameloop/battle/battle.inc"
 INCLUDE "struct/battle_stats.inc"
+INCLUDE "macro/relpointer.inc"
 
 
 SECTION "BATTLE STATES", ROMX
@@ -20,6 +21,32 @@ SECTION "BATTLE STATES", ROMX
 
         ; No known state found :(
         rst VecError
+    ;
+
+
+
+    ; Ends the current action.
+    ; Depending on which character performed the action, different things will happen.
+    ;
+    ; Destroys: all
+    BattleEndAction::
+        ld a, [wBattleCurrentChar]
+        ld b, a
+        battle_charid_to_statptr hl
+        relpointer_init l, 0
+
+        ; Increase characters AP
+        relpointer_move BATTLE_STATS_AP
+        ld a, [hl]
+        add a, BATTLE_AP_RESTORE
+        ld [hl], a
+
+        ; Change battle state depending on character
+        ld a, b
+        cp a, CHARID_ENEMY1
+        jp c, BattleChangeStateMovement
+        jp nc, BattleChangeStateEnemy
+        relpointer_destroy
     ;
 
 
@@ -103,8 +130,43 @@ SECTION "BATTLE STATES", ROMX
         ret
     ;
 
-    ; Action battle state, waiting for character entity to hijack execution.
+    ; Action battle state.
+    ; Waiting for character entity to hijack execution.
     BattleStateAction:
+        ret
+    ;
+
+
+
+    ; Begin the movement state.
+    ;
+    ; Destroys: all
+    BattleChangeStateMovement::
+        ld a, BATTLE_STATE_MOVEMENT
+        ld [wBattleState], a
+        ret
+    ;
+
+    ; Player movement state.
+    ; Waiting for player entity to hijack execution.
+    BattleStateMovement:
+        ret
+    ;
+
+
+
+    ; Begin the enemy state.
+    ;
+    ; Destroys: all
+    BattleChangeStateEnemy::
+        ld a, BATTLE_STATE_ENEMY
+        ld [wBattleState], a
+        ret
+    ;
+
+    ; Enemy decision and movement state.
+    ; Waiting for enemy entity to hijack execution.
+    BattleStateEnemy:
         ret
     ;
 

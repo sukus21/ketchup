@@ -20,11 +20,11 @@ DEF BATTLE_STATS_Y RB 1
 ; Current delay time
 DEF BATTLE_STATS_ACTION_DELAY RB 1
 
-; ROM Bank of action routine
-DEF BATTLE_STATS_ACTION_BANK RB 1
-
 ; Action routine pointer
-DEF BATTLE_STATS_ACTION RB 2
+DEF BATTLE_STATS_ACTION RB 1
+
+; Padding, for 8-byte alignment
+DEF __BATTLE_STATS_PADDING RB 2
 
 ; Keeps track of stats and state of battle objects.
 ; HP, AP, grid position, action/delay state etc. is all stored here.
@@ -38,5 +38,8 @@ RSRESET
 DEF CHARID_HERBERT RB 1
 DEF CHARID_MENJA RB 1
 DEF CHARID_DUFFIN RB 1
+
+DEF CHARID_ENEMY1 RB 1
+DEF CHARID_ENEMY2 RB 1
 
     ENDC
