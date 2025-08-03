@@ -702,6 +702,7 @@ ErrorMessages:
     ErrorRomXBankMarker::   create_message "ROMX BANK W/O MARK"
     ErrorRomXBankCount::    create_message "BAD ROMX BANK COUNT"
     ErrorSramBankCount::    create_message "BAD SRAM BANK COUNT"
+    ErrorUnimplemented::    create_message "UNIMPLEMENTED"
     POPC
 ;
 

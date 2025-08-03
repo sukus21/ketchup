@@ -33,14 +33,14 @@ DEF ENTVAR_PLAYER_CHARID RB 1
 ; Player states
 RSRESET
 
-; Character is idle, no actions selected
+; Character is idle, waiting for game state to change
 DEF PLAYER_STATE_IDLE RB 1
 
-; Character has an action queued, and is waiting to execute it
-DEF PLAYER_STATE_WAITING RB 1
+; Character is performing an action
+DEF PLAYER_STATE_ACTION RB 1
 
 ; Player character is currently being moved
-DEF PLAYER_STATE_MOVE RB 1
+DEF PLAYER_STATE_MOVEMENT RB 1
 
 ; Action selected, action/item is being selected for character
 DEF PLAYER_STATE_MENUING RB 1

@@ -4,6 +4,7 @@ INCLUDE "gameloop/battle/vram.inc"
 INCLUDE "macro/memcpy.inc"
 INCLUDE "utils.inc"
 INCLUDE "struct/battle_stats.inc"
+INCLUDE "gameloop/battle/battle.inc"
 
 
 SECTION "ENTITY BATTLE PLAYER DATA", ROMX
@@ -134,54 +135,130 @@ SECTION "ENTITY BATTLE PLAYER", ROMX
     ; Saves: `hl`
     PlayerUpdate:
         push hl
-        relpointer_init l
+        ld bc, .return
+        push bc
 
         ; Read out state
+        relpointer_init l
         relpointer_move ENTVAR_PLAYER_STATE
         ld a, [hl]
+        relpointer_destroy
 
         ; Switch based on state
         cp a, PLAYER_STATE_IDLE
-        jr nz, .notIdle
+        jp z, PlayerStateIdle
+        cp a, PLAYER_STATE_ACTION
+        jp z, PlayerStateAction
+        cp a, PLAYER_STATE_MOVEMENT
+        jp z, PlayerStateMovement
 
-            ; Get stats pointer -> DA (yes, A)
-            relpointer_push ENTVAR_PLAYER_STATS+1
-            ld a, [hl-]
-            ld d, a
-            ld a, [hl+]
-
-            ; Move stats pointer to X/Y position -> DE
-            add a, BATTLE_STATS_X
-            ld e, a
-
-            ; Get X/Y grid position -> BC
-            ld a, [de]
-            ld b, a
-            inc e
-            ld a, [de]
-            ld c, a
-
-            ; Convert grid-space into screen-space
-            call BattleGridspaceToScreenspace
-
-            ; Store these back in player entity
-            relpointer_move ENTVAR_PLAYER_X
-            xor a
-            ld [hl+], a
-            ld a, b
-            ld [hl-], a
-            relpointer_move ENTVAR_PLAYER_Y
-            xor a
-            ld [hl+], a
-            ld a, c
-            ld [hl-], a
-
-            relpointer_pop
-        .notIdle
+        ; Invalid state
+        ld hl, ErrorUnimplemented
+        rst VecError
 
         ; Ok, that's all
-        relpointer_destroy
+        .return
         pop hl
+        ret
+    ;
+
+
+
+    ; Player idle state.
+    ;
+    ; Input:
+    ; - `hl`: Player entity @`ENTVAR_PLAYER_STATE`
+    ;
+    ; Saves: none
+    PlayerStateIdle:
+        relpointer_init l, ENTVAR_PLAYER_STATE
+
+        ; Do we have to do anything else?
+        ld a, [wBattleCurrentChar]
+        ld b, a
+        relpointer_push ENTVAR_PLAYER_CHARID
+        ld a, [hl]
+        relpointer_pop
+        cp a, b
+        jr nz, .doIdle
+            ld a, [wBattleState]
+
+            ; Are we supposed to enter the movement state?
+            cp a, BATTLE_STATE_MOVEMENT
+            jr nz, :+
+                relpointer_push ENTVAR_PLAYER_STATE, 0
+                ld [hl], PLAYER_STATE_MOVEMENT
+                jp PlayerStateMovement
+                relpointer_pop 0
+            :
+
+            ; Are we supposed to enter the action state?
+            cp a, BATTLE_STATE_ACTION
+            jr nz, :+
+                relpointer_push ENTVAR_PLAYER_STATE, 0
+                ld [hl], PLAYER_STATE_ACTION
+                jp PlayerStateAction
+                relpointer_pop 0
+            :
+
+        ; Get stats pointer -> DA (yes, A)
+        .doIdle
+        relpointer_move ENTVAR_PLAYER_STATS+1
+        ld a, [hl-]
+        ld d, a
+        ld a, [hl+]
+
+        ; Move stats pointer to X/Y position -> DE
+        add a, BATTLE_STATS_X
+        ld e, a
+
+        ; Get X/Y grid position -> BC
+        ld a, [de]
+        ld b, a
+        inc e
+        ld a, [de]
+        ld c, a
+
+        ; Convert grid-space into screen-space
+        call BattleGridspaceToScreenspace
+
+        ; Store these back in player entity
+        relpointer_move ENTVAR_PLAYER_X
+        xor a
+        ld [hl+], a
+        ld a, b
+        ld [hl-], a
+        relpointer_move ENTVAR_PLAYER_Y
+        xor a
+        ld [hl+], a
+        ld a, c
+        ld [hl-], a
+
+        relpointer_destroy
+        ret
+    ;
+
+
+
+    ; Player movement state.
+    ;
+    ; Input:
+    ; - `hl`: Player entity @`ENTVAR_PLAYER_STATE`
+    ;
+    ; Saves: none
+    PlayerStateMovement:
+        ret
+    ;
+
+
+
+    ; Player movement state.
+    ;
+    ; Input:
+    ; - `hl`: Player entity @`ENTVAR_PLAYER_STATE`
+    ;
+    ; Saves: none
+    PlayerStateAction:
         ret
     ;
 
@@ -240,7 +317,7 @@ SECTION "ENTITY BATTLE PLAYER", ROMX
     ;
 
     ; Herberts idle pose
-    TmplHerbertIdle:: db %0110_0110
+    TmplHerbertIdle: db %0110_0110
         db VTI_BATTLE_HERBERT_IDLE + $00, OBJPAL_BATTLE_HERBERT
         db VTI_BATTLE_HERBERT_IDLE + $04, OBJPAL_BATTLE_HERBERT
         db VTI_BATTLE_HERBERT_IDLE + $02, OBJPAL_BATTLE_HERBERT
@@ -248,7 +325,7 @@ SECTION "ENTITY BATTLE PLAYER", ROMX
     ;
 
     ; Menjas idle pose
-    TmplMenjaIdle:: db %0110_0110
+    TmplMenjaIdle: db %0110_0110
         db VTI_BATTLE_MENJA_IDLE + $00, OBJPAL_BATTLE_MENJA
         db VTI_BATTLE_MENJA_IDLE + $04, OBJPAL_BATTLE_MENJA
         db VTI_BATTLE_MENJA_IDLE + $02, OBJPAL_BATTLE_MENJA
@@ -256,7 +333,7 @@ SECTION "ENTITY BATTLE PLAYER", ROMX
     ;
 
     ; Duffins idle pose
-    TmplDuffinIdle:: db %0000_0110
+    TmplDuffinIdle: db %0000_0110
         db VTI_BATTLE_DUFFIN_IDLE + $00, OBJPAL_BATTLE_DUFFIN, 
         db VTI_BATTLE_DUFFIN_IDLE + $02, OBJPAL_BATTLE_DUFFIN
     ;
