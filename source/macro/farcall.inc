@@ -71,7 +71,7 @@ ENDM
 MACRO farjump
     IF BANK(@) == 0
         ld a, BANK(\1)
-        ld [hBankNumber], a
+        ld [rROMB0], a
         jp \1
     ELSE
         ld a, BANK(\1)
