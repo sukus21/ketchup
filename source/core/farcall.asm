@@ -18,7 +18,6 @@ Farcall0::
 
     ; Switch banks
     ld a, b
-    ldh [hBankNumber], a
     ld [rROMB0], a
 
     ; Jump
@@ -40,12 +39,11 @@ Farcall0::
 FarcallX::
 
     ; Set up things for returning
-    ldh a, [hBankNumber]
+    ld a, [rRomXBank]
     push af
 
     ; Switch banks
     ld a, b
-    ldh [hBankNumber], a
     ld [rROMB0], a
 
     ; Jump
@@ -53,7 +51,6 @@ FarcallX::
 
     ; Returning after jump, reset bank number
     pop af
-    ldh [hBankNumber], a
     ld [rROMB0], a
 
     ; Return
@@ -75,12 +72,11 @@ FarcallX::
 FarcallXD::
 
     ; Store current bank number
-    ldh a, [hBankNumber]
+    ld a, [rRomXBank]
     push af
 
     ; Switch banks
     ld a, d
-    ldh [hBankNumber], a
     ld [rROMB0], a
 
     ; Jump
@@ -88,7 +84,6 @@ FarcallXD::
 
     ; Returning after jump, reset banks
     pop af
-    ldh [hBankNumber], a
     ld [rROMB0], a
 
     ; Return
@@ -107,9 +102,11 @@ FarcallXD::
 ;
 ; Destroys: `a`, unknown
 FarcallHandlerX::
-    ld [rROMB0], a
-    ldh a, [hBankNumber]
+    ldh [hBankNumber], a
+    ld a, [rRomXBank]
     push af
+    ldh a, [hBankNumber]
+    ld [rROMB0], a
     rst VecHL
     pop af
     ld [rROMB0], a
@@ -137,5 +134,5 @@ Farjump::
 SECTION "FARCALL VARIABLES", HRAM
 
     ; Which ROM-bank is currently switched in.
-    hBankNumber:: ds 1
+    hBankNumber: ds 1
 ;

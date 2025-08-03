@@ -52,8 +52,6 @@ ENDM
 ; Destroys: `a`, `hl`, unknown
 MACRO farcall_x
     ASSERT bank(@) != 0, "farcall - should not use farcall_x from ROM0"
-    ld a, bank(@)
-    ldh [hBankNumber], a
     ld a, bank(\1)
     ld hl, \1
     call FarcallHandlerX
@@ -69,9 +67,9 @@ ENDM
 ;
 ; Destroys: `a`, `hl`
 MACRO farjump
-    IF BANK(@) == 0
+    IF ISCONST(BANK(@)) && BANK(@) == 0
         ld a, BANK(\1)
-        ld [hBankNumber], a
+        ld [rROMB0], a
         jp \1
     ELSE
         ld a, BANK(\1)
