@@ -5,6 +5,7 @@ INCLUDE "macro/memcpy.inc"
 INCLUDE "utils.inc"
 INCLUDE "struct/battle_stats.inc"
 INCLUDE "gameloop/battle/battle.inc"
+INCLUDE "macro/farcall.inc"
 
 
 SECTION "ENTITY BATTLE PLAYER DATA", ROMX
@@ -247,6 +248,10 @@ SECTION "ENTITY BATTLE PLAYER", ROMX
     ;
     ; Saves: none
     PlayerStateMovement:
+        relpointer_init l, ENTVAR_PLAYER_STATE
+        relpointer_move ENTVAR_PLAYER_X+1
+        inc [hl]
+        relpointer_destroy
         ret
     ;
 
@@ -259,6 +264,32 @@ SECTION "ENTITY BATTLE PLAYER", ROMX
     ;
     ; Saves: none
     PlayerStateAction:
+        relpointer_init l, ENTVAR_PLAYER_STATE
+
+        ; Oh wait hang on are we done?
+        ld a, [wBattleState]
+        cp a, BATTLE_STATE_ACTION
+        jr nz, :+
+            ld [hl], PLAYER_STATE_MOVEMENT
+            jp PlayerStateMovement
+        :
+
+        ; Find action and perform it
+        relpointer_move ENTVAR_PLAYER_STATS
+        ld a, [hl+]
+        ld e, a
+        ld a, [hl-]
+        ld d, a
+        ld a, [de]
+
+        ; Set up arguments
+        ld b, a
+        relpointer_move 0
+        ld d, h
+        ld e, l
+        farcall_x PerformAction
+
+        relpointer_destroy
         ret
     ;
 
