@@ -23,8 +23,11 @@ DEF BATTLE_STATS_ACTION_DELAY RB 1
 ; Action routine pointer
 DEF BATTLE_STATS_ACTION RB 1
 
-; Padding, for 8-byte alignment
-DEF __BATTLE_STATS_PADDING RB 2
+; For attacks which can be moved, this is the X-position
+DEF BATTLE_STATS_TARGET_X RB 1
+
+; For attacks which can be moved, this is the Y-position
+DEF BATTLE_STATS_TARGET_Y RB 1
 
 ; Keeps track of stats and state of battle objects.
 ; HP, AP, grid position, action/delay state etc. is all stored here.

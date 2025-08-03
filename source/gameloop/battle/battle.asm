@@ -5,6 +5,7 @@ INCLUDE "gameloop/battle/battle.inc"
 INCLUDE "macro/farcall.inc"
 INCLUDE "gameloop/battle/vram.inc"
 INCLUDE "struct/battle_stats.inc"
+INCLUDE "gameloop/battle/action/action.inc"
 
 
 SECTION "GAMELOOP BATTLE", ROMX
@@ -90,6 +91,12 @@ GameloopBattle::
     call BattleAddToQueue
     ld a, CHARID_MENJA
     call BattleAddToQueue
+
+    ; Set default action for all player characters
+    ld a, BATTLE_ACTION_NONE
+    ld [wBattleStatsHerbert + BATTLE_STATS_ACTION], a
+    ld [wBattleStatsMenja + BATTLE_STATS_ACTION], a
+    ld [wBattleStatsDuffin + BATTLE_STATS_ACTION], a
 
     ; Transfer the required assets to VRAM
     vqueue_enqueue GameloopBattleInitTransfer
