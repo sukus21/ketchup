@@ -306,16 +306,16 @@ SECTION "ENTITY BATTLE PLAYER", ROMX
         ret
 
         .openActionMenu
-            
-            ; Set battle state
-            ld a, BATTLE_STATE_MENU_ACTION
-            ld [wBattleState], a
 
             ; Set entity state
             relpointer_init l, ENTVAR_PLAYER_STATE
             relpointer_move ENTVAR_PLAYER_STATE
             ld [hl], PLAYER_STATE_MENUING
             relpointer_destroy
+
+            
+            ; Set battle state
+            farcall_x BattleChangeStateMenuAction
             ret
         ;
 

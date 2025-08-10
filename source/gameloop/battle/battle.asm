@@ -83,6 +83,15 @@ GameloopBattle::
     ld d, CHARID_DUFFIN
     farcall_x EntityBattlePlayerCreate
 
+    ; Initialize action lists
+    ; TODO: read actions from equipped items
+    ld hl, wBattleActionList
+    xor a
+    REPT 20
+        ld [hl+], a
+        inc a
+    ENDR
+
     ; Add these guys to the queue
     ; TODO: allow player to define the order
     ld a, CHARID_DUFFIN
@@ -243,6 +252,27 @@ SECTION "GAMELOOP BATTLE VARIABLES", WRAM0
     ; Indices into `wBattleStats`, or $FF for none
     wBattleTurnOrder:: ds 5
         .terminator ds 1
+    
+    ; Action IDs per character
+    wBattleActionList::
+        .herbert:: ds 4
+        .menja:: ds 4
+        .duffin:: ds 4
+        .enemy1:: ds 4
+        .enemy2:: ds 4
+    ;
+
+    ; Action list for current character.
+    ; Is only set when entering the menuing state.
+    ; At any other time, this will be invalid.
+    wBattleActionListCurrent:: ds 4
+
+    ; How many actions the current character has.
+    wBattleActionNum:: ds 1
+
+    ; Cursor Y-position for menu.
+    wBattleActionMenuCursor:: ds 1
+
 ENDSECTION
 
 

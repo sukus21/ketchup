@@ -206,6 +206,56 @@ SECTION "BATTLE STATES", ROMX
     ;
     ; Destroys: all
     BattleChangeStateMenuAction::
+        ld a, BATTLE_STATE_MENU_ACTION
+        ld [wBattleState], a
+
+        ; Create pointer to current char action list
+        ld a, [wBattleCurrentChar]
+        add a, a
+        add a, a
+        add a, low(wBattleActionList)
+        ld l, a
+        ld h, high(wBattleActionList)
+        jr nc, :+
+            inc h
+        :
+
+        ; Copy action list
+        ld a, [hl+]
+        ld b, a
+        ld a, [hl+]
+        ld c, a
+        ld a, [hl+]
+        ld d, a
+        ld e, [hl]
+        ld hl, wBattleActionListCurrent
+        ld a, b
+        ld [hl+], a
+        ld a, c
+        ld [hl+], a
+        ld a, d
+        ld [hl+], a
+        ld [hl], e
+
+        ; Count how many actions this character has
+        ld b, 4
+        .loop
+            ld a, $FF
+            cp a, [hl]
+            jr nz, .foundNumber
+
+            dec hl
+            dec b
+            jr nz, .loop
+        .foundNumber
+        ld a, b
+        ld [wBattleActionNum], a
+
+        ; Set cursor position
+        xor a
+        ld [wBattleActionMenuCursor], a
+
+        ; We done
         ret
     ;
 
@@ -217,6 +267,33 @@ SECTION "BATTLE STATES", ROMX
 
         bit PADB_B, e
         jr nz, .goBack
+
+        ; Begin moving da cursor
+        ld hl, wBattleActionMenuCursor
+        bit PADB_UP, e
+        jr z, :+
+            dec [hl]
+        :
+        bit PADB_DOWN, e
+        jr z, :+
+            inc [hl]
+        :
+
+        ; Clamp
+        ld a, [hl]
+        inc a ; cp a, $FF
+        jr nz, :+
+            ld a, [wBattleActionNum]
+            ld [hl], a
+            jr :++
+        :
+
+        ; Clamp 2
+        ld a, [wBattleActionNum]
+        cp a, [hl]
+        jr nc, :+
+            ld [hl], 0
+        :
 
         ret
 
