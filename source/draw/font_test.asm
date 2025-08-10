@@ -1,5 +1,4 @@
 
-
 SECTION "FONT TEST", ROM0, ALIGN[8]
 
 ; Test font :D
@@ -36,6 +35,41 @@ FontTest::
     db 2 ; .
     db 2 ; !
     db 4 ; ?
+    db 3 ; (
+    db 3 ; )
+    db 4 ; $
+    db 2 ; :
+    db 3 ; ;
+    db 2 ; ,
+    db 6 ; 🎵
+    db 4 ; 0
+    db 4 ; 1
+    db 4 ; 2
+    db 4 ; 3
+    db 4 ; 4
+    db 4 ; 5
+    db 4 ; 6
+    db 4 ; 7
+    db 4 ; 8
+    db 4 ; 9
+    db 4 ; ö
+    db 4 ; -
+    db 5 ; -.
+    db 6 ; ~
+    db 6 ; +
+    db 4 ; /
+    db 4 ; <
+    db 4 ; >
+    db 3 ; [
+    db 3 ; ]
+    db 2 ; '
+    db 5 ; %
+    db 5 ; &
+    db 6 ; 😃
+    db 6 ; 😠
+    db 6 ; #
+    db 6 ; ❤️
+    db 3 ; Whitespace
 
     ; Padding to page boundary
     .padding

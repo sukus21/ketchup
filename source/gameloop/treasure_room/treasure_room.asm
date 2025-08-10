@@ -100,12 +100,24 @@ GameloopTreasureRoom::
                 ldh [hTreasureRoomVars.state], a
             :
 
-            jp .stateEnd
+            jr .stateEnd
         :
 
         dec a
         jp nz, :+
             call AdvanceChestAnim
+            jr .stateEnd
+        :
+
+        dec a
+        jp nz, :++
+            ldh a, [hTreasureRoomVars.animTime]
+            dec a
+            jr z, :+
+                ldh [hTreasureRoomVars.animTime], a
+                jr .stateEnd
+            :
+            farcall_x GameloopEquipmentScreen
         :
         
         .stateEnd:
@@ -174,8 +186,10 @@ AdvanceChestAnim:
     inc a
     cp a, 20
     jr nz, :+
-        xor a, a
+        ld a, 2
         ldh [hTreasureRoomVars.state], a
+        ld a, 30
+        ldh [hTreasureRoomVars.animTime], a
         ret
     :
     ldh [hTreasureRoomVars.animTime + 1], a

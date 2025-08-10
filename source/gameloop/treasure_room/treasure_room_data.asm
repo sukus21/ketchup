@@ -6,7 +6,7 @@ INCLUDE "macro/farcall.inc"
 SECTION "TREASURE ROOM DATA", ROMX
 
 GameloopTreasureRoomInitTransfer::
-    call LoadStatusHud
+    farcall_x LoadStatusHud
 
     xor a
     ldh [rVBK], a

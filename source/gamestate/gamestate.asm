@@ -1,5 +1,6 @@
 INCLUDE "hardware.inc/hardware.inc"
 INCLUDE "gamestate/gamestate.inc"
+INCLUDE "content/equipables/equipables.inc"
 
 DEF MAP_DEPTH EQU 8
 DEF MAP_LANES EQU 5
@@ -79,18 +80,20 @@ InitRun::
     ld [hl+], a
 
     ; Set character equipment
-    ld [hl], 1;EQUIPMENT_ID_FIRST_AID_KIT ; Herbert's starter item
+    cpl
+    ld [hl], EQUIPABLE_ID_FIRST_AID_KIT ; Herbert's starter item
     inc l
     ld [hl+], a
     ld [hl+], a
-    ld [hl], 2;EQUIPMENT_ID_POT_LID_SHIELD ; Menja's starter item
+    ld [hl], EQUIPABLE_ID_SPELLBOY ; Menja's starter item
     inc l
     ld [hl+], a
     ld [hl+], a
-    ld [hl], 3;EQUIPMENT_ID_BUTTER_KNIFE ; Duffin's starter item
+    ld [hl], EQUIPABLE_ID_BUTTER_KNIFE ; Duffin's starter item
     inc l
     ld [hl+], a
     ld [hl+], a
+    cpl
 
     ; Clear travel progress
     ld [hl+], a
