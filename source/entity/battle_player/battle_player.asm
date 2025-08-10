@@ -248,11 +248,113 @@ SECTION "ENTITY BATTLE PLAYER", ROMX
     ;
     ; Saves: none
     PlayerStateMovement:
-        relpointer_init l, ENTVAR_PLAYER_STATE
-        relpointer_move ENTVAR_PLAYER_X+1
-        inc [hl]
-        relpointer_destroy
-        ret
+        ; Return early if no player input
+        ld a, [wInputPressed]
+        or a, a
+        ret z
+        ld e, a ; Save input in `e`
+
+        ; Are we moving?
+        and a, PADF_UP | PADF_DOWN | PADF_LEFT | PADF_RIGHT
+        jr nz, .movement
+
+        ; Nope, try opening a menu
+        ret ; TODO
+
+
+        .movement
+            relpointer_init l, ENTVAR_PLAYER_STATE
+
+            ; Get grid position -> BC
+            relpointer_move ENTVAR_PLAYER_CHARID
+            ld a, [hl]
+            battle_charid_to_statptr bc, BATTLE_STATS_X
+            push bc
+            ld a, [bc]
+            ld d, a
+            inc bc
+            ld a, [bc]
+            ld b, d ; X-position
+            ld c, a ; Y-position
+
+            ; Offset X or Y position
+            bit PADB_UP, e
+            jr z, :+
+                dec c
+                jr .foundDirection
+            :
+            bit PADB_DOWN, e
+            jr z, :+
+                inc c
+                jr .foundDirection
+            :
+            bit PADB_LEFT, e
+            jr z, :+
+                dec b
+                jr .foundDirection
+            :
+            bit PADB_RIGHT, e
+            jr z, :+
+                inc b
+                jr .foundDirection
+            :
+
+            ; Start moving
+            .foundDirection
+            ld d, [hl]
+            call BattleCanPlayerMoveTo
+            pop de ; restore BATTLE_STATS pointer
+            jr z, .notAllowed
+                push hl
+
+                ; Update AP
+                dec e ; DE now points to AP
+                battle_coords_to_movement_grid b, c, hl
+                ld a, [de]
+                cp a, [hl]
+                jr c, :+
+                    ; Tile is not a re-thread, do the thing
+                    ld a, [de]
+                    dec a
+                    ld [de], a
+
+                    ; Update movement grid value
+                    ld [hl], a
+                    
+                    jr .doneUpdatingAP
+                :
+                    ; Tile IS a rethread, load value from movement grid
+                    ld a, [hl]
+                    ld [de], a
+                .doneUpdatingAP
+
+
+                ; Move character grid position
+                inc e
+                ld a, b
+                ld [de], a
+                inc e
+                ld a, c
+                ld [de], a
+
+                ; Sync entity position with grid position
+                call BattleGridspaceToScreenspace
+                pop hl
+                relpointer_move ENTVAR_PLAYER_X
+                xor a
+                ld [hl+], a
+                ld a, b
+                ld [hl+], a
+                xor a
+                ld [hl+], a
+                ld [hl], c
+                relpointer_add 3
+
+
+            .notAllowed
+
+            relpointer_destroy
+            ret
     ;
 
 
@@ -269,7 +371,7 @@ SECTION "ENTITY BATTLE PLAYER", ROMX
         ; Oh wait hang on are we done?
         ld a, [wBattleState]
         cp a, BATTLE_STATE_ACTION
-        jr nz, :+
+        jr z, :+
             ld [hl], PLAYER_STATE_MOVEMENT
             jp PlayerStateMovement
         :

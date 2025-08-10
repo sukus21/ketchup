@@ -257,4 +257,15 @@ SECTION "BATTLE STATS", WRAM0, ALIGN[3]
 
     wBattleStatsEnemy1:: ds BATTLE_STATS_T
     wBattleStatsEnemy2:: ds BATTLE_STATS_T
-;
+ENDSECTION
+
+
+SECTION "BATTLE MOVEMENT GRID", WRAM0, ALIGN[4]
+    
+    ; 3x5 grid of tiles.
+    ; Contains the AP of the character when they were last here.
+    ; Helps with undoing accidental movements.
+    ;
+    ; When a value is 0, that means the tile has not been accessed before.
+    wBattleMovementGrid:: ds 3*5
+ENDSECTION

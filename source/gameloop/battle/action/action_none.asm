@@ -5,14 +5,14 @@ INCLUDE "entity/battle_player/battle_player.inc"
 
 SECTION "BATTLE ACTION NONE", ROMX
 
-; Does nothing, and immediately goes back to the ticking action.
+; Does nothing, and immediately stops
 ;
 ; Input:
 ; - `de`: Character entity pointer
 ;
 ; Destroys: all
 BattleActionNone::
-    farjump BattleChangeStateCountdown
+    farjump BattleEndAction
 ;
 
 

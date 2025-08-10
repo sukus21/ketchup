@@ -18,8 +18,11 @@ SECTION "BATTLE STATES", ROMX
         jp z, BattleStateCountdown
         cp a, BATTLE_STATE_ACTION
         jp z, BattleStateAction
+        cp a, BATTLE_STATE_MOVEMENT
+        jp z, BattleStateMovement
 
         ; No known state found :(
+        ld hl, ErrorUnimplemented
         rst VecError
     ;
 
@@ -144,6 +147,31 @@ SECTION "BATTLE STATES", ROMX
     BattleChangeStateMovement::
         ld a, BATTLE_STATE_MOVEMENT
         ld [wBattleState], a
+
+        ; Clear movement grid
+        ld hl, wBattleMovementGrid
+        xor a
+        REPT 3 * 5
+            ld [hl+], a
+        ENDR
+
+        ; Set starting tile AP amount
+        ld a, [wBattleCurrentChar]
+        battle_charid_to_statptr hl, BATTLE_STATS_AP
+
+        ; Read variables from stats
+        STATIC_ASSERT BATTLE_STATS_X == BATTLE_STATS_AP + 1
+        ld a, [hl+]; AP -> D
+        ld d, a
+        ld a, [hl+] ; X -> B
+        ld c, [hl] ; Y -> C
+        ld b, a
+
+        ; Write to grid
+        battle_coords_to_movement_grid b, c, hl
+        ld [hl], d
+
+        ; Return
         ret
     ;
 

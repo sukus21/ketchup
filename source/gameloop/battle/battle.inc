@@ -79,4 +79,26 @@ MACRO battle_charid_to_statptr
     ld high(\1), a
 ENDM
 
+
+
+; Converts X/Y coordinates to a pointer to the thing.
+;
+; Input:
+; - `1`: X-coordinate (r8/n8)
+; - `2`: Y-coordinate (r8/n8)
+; - `3`: Destination (r16)
+;
+; Returns:
+; - `3`: `wBattleMovementGrid` + \2*3 + \1
+MACRO battle_coords_to_movement_grid
+    ASSERT wBattleMovementGrid & 0xF == 0
+    ld a, \2
+    add a, a
+    add a, \2
+    add a, \1
+    add a, low(wBattleMovementGrid)
+    ld low(\3), a
+    ld high(\3), high(wBattleMovementGrid)
+ENDM
+
     ENDC

@@ -65,10 +65,11 @@ SECTION "BATTLE HELPER FUNCTIONS", ROM0
     ; Input:
     ; - `b`: Cell test X
     ; - `c`: Cell test Y
+    ; - `d`: `CHARID`
     ;
     ; Returns:
     ; - `a`: 0 if allowed
-    ; - `fZ`: Set if allowed (z = allowed)
+    ; - `fZ`: Reset if allowed (nz = allowed)
     ;
     ; Destroys: `af`
     BattleCanPlayerMoveTo::
@@ -77,7 +78,7 @@ SECTION "BATTLE HELPER FUNCTIONS", ROM0
         ld a, b
         cp a, 3
         jr c, :+
-            or a, $FF ; reset Z flag
+            xor a ; set Z flag
             ret
         :
         
@@ -85,19 +86,38 @@ SECTION "BATTLE HELPER FUNCTIONS", ROM0
         ld a, c
         cp a, 5
         jr c, :+
-            or a, $FF ; reset Z flag
+            xor a ; set Z flag
             ret
         :
 
         ; Y must also be above 1
         cp a, 2
         jr nc, :+
-            or a, $FF ; reset Z flag
+            xor a ; set Z flag
             ret
         :
 
         ; Save these for later
         push hl
+
+        ; Does player have enough AP for this?
+        ld a, d
+        battle_charid_to_statptr hl, BATTLE_STATS_AP
+        ld a, [hl]
+        or a, a ; cp a, 0
+        jr nz, .hasAP
+
+            ; Is this tile a re-tread?
+            battle_coords_to_movement_grid b, c, hl
+            ld a, [hl]
+            or a, a ; cp a, 0
+            jr nz, .hasAP
+
+            ; Nope, it is not
+            xor a ; set Z flag
+            pop hl
+            ret
+        .hasAP
 
         ; Check overlap
         ld hl, wBattleStatsHerbert
@@ -108,7 +128,6 @@ SECTION "BATTLE HELPER FUNCTIONS", ROM0
         call nz, .helper
 
         ; Return
-        xor a, $FF ; invert Z flag
         pop hl
         ret
 
