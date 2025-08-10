@@ -20,6 +20,8 @@ SECTION "BATTLE STATES", ROMX
         jp z, BattleStateAction
         cp a, BATTLE_STATE_MOVEMENT
         jp z, BattleStateMovement
+        cp a, BATTLE_STATE_MENU_ACTION
+        jp z, BattleStateMenuAction
 
         ; No known state found :(
         ld hl, ErrorUnimplemented
@@ -196,6 +198,35 @@ SECTION "BATTLE STATES", ROMX
     ; Waiting for enemy entity to hijack execution.
     BattleStateEnemy:
         ret
+    ;
+
+
+
+    ; Initializes the action menu state.
+    ;
+    ; Destroys: all
+    BattleChangeStateMenuAction::
+        ret
+    ;
+
+    ; Menuing, select action for character
+    BattleStateMenuAction:
+
+        ld a, [wInputPressed]
+        ld e, a
+
+        bit PADB_B, e
+        jr nz, .goBack
+
+        ret
+
+        .goBack:
+
+            ld a, BATTLE_STATE_MOVEMENT
+            ld [wBattleState], a
+
+            ret
+        ;
     ;
 
 ENDSECTION

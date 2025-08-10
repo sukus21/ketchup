@@ -152,6 +152,8 @@ SECTION "ENTITY BATTLE PLAYER", ROMX
         jp z, PlayerStateAction
         cp a, PLAYER_STATE_MOVEMENT
         jp z, PlayerStateMovement
+        cp a, PLAYER_STATE_MENUING
+        jp z, PlayerStateMenuing
 
         ; Invalid state
         ld hl, ErrorUnimplemented
@@ -241,6 +243,44 @@ SECTION "ENTITY BATTLE PLAYER", ROMX
 
 
 
+    ; Player menuing state.
+    ; Wait for menu state to be over before doing something.
+    ;
+    ; Input:
+    ; - `hl`: Player entity @`ENTVAR_PLAYER_STATE`
+    ;
+    ; Saves: none
+    PlayerStateMenuing:
+        relpointer_init l, ENTVAR_PLAYER_STATE
+
+        ; Should we end the menu state?
+        ld a, [wBattleState]
+
+        ; Go back to schmooving
+        cp a, BATTLE_STATE_MOVEMENT
+        jr nz, :+
+            relpointer_assert ENTVAR_PLAYER_STATE
+            ld [hl], PLAYER_STATE_MOVEMENT
+            ret
+        :
+
+        ; Is my turn done?
+        relpointer_move ENTVAR_PLAYER_CHARID
+        ld a, [wBattleCurrentChar]
+        cp a, [hl]
+        jr nz, :+
+            relpointer_move ENTVAR_PLAYER_STATE
+            ld [hl], PLAYER_STATE_IDLE
+            ret
+        :
+
+        ; Nothing happened
+        relpointer_destroy
+        ret
+    ;
+
+
+
     ; Player movement state.
     ;
     ; Input:
@@ -259,8 +299,25 @@ SECTION "ENTITY BATTLE PLAYER", ROMX
         jr nz, .movement
 
         ; Nope, try opening a menu
-        ret ; TODO
+        bit PADB_A, e
+        jr nz, .openActionMenu
 
+        ; Nothing
+        ret
+
+        .openActionMenu
+            
+            ; Set battle state
+            ld a, BATTLE_STATE_MENU_ACTION
+            ld [wBattleState], a
+
+            ; Set entity state
+            relpointer_init l, ENTVAR_PLAYER_STATE
+            relpointer_move ENTVAR_PLAYER_STATE
+            ld [hl], PLAYER_STATE_MENUING
+            relpointer_destroy
+            ret
+        ;
 
         .movement
             relpointer_init l, ENTVAR_PLAYER_STATE
