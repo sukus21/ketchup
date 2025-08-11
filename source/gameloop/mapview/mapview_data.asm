@@ -106,10 +106,10 @@ GameloopMapviewInitTransfer::
     xor a
     ldh [rVBK], a
 
-    memcpy_label TilesetGridTiles, _VRAM9000
+    memcpy_vdma_label TilesetGridTiles, _VRAM9000
 
     ; Load sprite tileset
-    memcpy_label SpriteTiles, _VRAM8000
+    memcpy_vdma_label SpriteTiles, _VRAM8000
     
     ; Load pointer to tilemap
     ld hl, _SCRN0
@@ -428,6 +428,9 @@ PathRow:
 
     pop bc
     ret
+;
+
+ds ALIGN[4]
 
 ; Tile data
 TilesetGridTiles:

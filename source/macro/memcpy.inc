@@ -68,4 +68,29 @@ MACRO memcpy_label
     call Memcpy
 ENDM
 
+
+
+; Input:
+; - `1`: Source (label)
+; - `2`: Destination
+; - `3`: (optional) Length
+;
+; Destroys: all
+MACRO memcpy_vdma_label
+    ASSERT (\1) % 16 == 0
+    ASSERT (\2) % 16 == 0
+
+    ASSERT (\2) >= _VRAM
+    ASSERT (\2) < (_VRAM + $2000)
+
+    ld hl, \2
+    ld bc, \1
+    IF _NARG == 3
+        ld d, (\3) / 16
+    ELSE
+        ld d, (\1.end - \1) / 16
+    ENDC
+    call MemcpyVDMA
+ENDM
+
     ENDC

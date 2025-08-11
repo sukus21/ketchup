@@ -24,8 +24,8 @@ GameloopEquipmentScreenInitTransfer::
     ld b, 6
     call PaletteCopyMultiBG
 
-    memcpy_label CharacterFaceTiles, _VRAM8000
-    memcpy_label GridTiles, _VRAM9000 + 16 * 8
+    memcpy_vdma_label CharacterFaceTiles, _VRAM8000
+    memcpy_vdma_label GridTiles, _VRAM9000 + (16 * 8)
 
     ld b, 8
     ld de, $0303
@@ -386,8 +386,14 @@ SetCellPalettes:
     ;
 ;
 
+    ds ALIGN[4]
+
 CharacterFaceTiles:
     INCBIN "gameloop/equipment_screen/char_faces.2bpp"
+.end
+
+GridTiles:
+    INCBIN "gameloop/equipment_screen/grid_bars.2bpp"
 .end
 
 CharacterFacePalettes:
@@ -408,10 +414,6 @@ CharacterFacePalettes:
     color_rgb8 $00, $00, $00
     color_rgb8 $AA, $20, $20
     color_rgb8 $B6, $88, $7A
-.end
-
-GridTiles:
-    INCBIN "gameloop/equipment_screen/grid_bars.2bpp"
 .end
 
 GridPalettes:

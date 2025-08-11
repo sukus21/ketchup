@@ -109,7 +109,7 @@ LoadStatusHud::
     ld a, 1
     ldh [rVBK], a
 
-    memcpy_label StatusHudTiles, VT_HUD
+    memcpy_vdma_label StatusHudTiles, VT_HUD
 
     ld hl, VT_HUD + (31 * 16)
     xor a, a
@@ -301,6 +301,8 @@ StatusHudPalettes:
     color_rgb8 $F0, $10, $10
     color_rgb8 $20, $2A, $38
 .end
+
+    ds ALIGN[4]
 
 StatusHudTiles:
     .char_icons: INCBIN "gamestate/char_icons.2bpp"

@@ -8,7 +8,7 @@ DEF MAP_LANES EQU 5
 DEF NUM_STRONG_ENCOUNTERS EQU 4
 
 ; DEF FIXED_SEED EQU $37EA ; Plenty of paths
-DEF FIXED_SEED EQU $000D ; Treasure rooms on first row
+; DEF FIXED_SEED EQU $000D ; Treasure rooms on first row
 
 SECTION "GAME STATE MANAGEMENT", ROMX, ALIGN[4]
 

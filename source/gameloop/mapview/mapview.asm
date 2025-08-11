@@ -20,6 +20,10 @@ BeginRun::
 ; Enter mapview.
 ; Does not return.
 GameloopMapview::
+    ; Increase CPU speed while loading
+    ld b, KEY1F_DBLSPEED | KEY1F_PREPARE
+    call SetCPUSpeed
+
     ; Set scroll
     ld a, BANK(wGameStateTravelProgress)
     ldh [rSVBK], a
@@ -81,6 +85,10 @@ GameloopMapview::
     ; Do initial VBlank
     call WaitVBlank
     farcall_x GameloopBattleVBlank
+
+    ; Loading is finished, and we won't need double speed during the loop
+    ld b, KEY1F_PREPARE
+    call SetCPUSpeed
 
     .loop:
         call ReadInput

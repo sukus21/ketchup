@@ -103,6 +103,112 @@ MemcpyShort::
 
 
 
+; Copies data into VRAM using a DMA transfer.
+; Destination must be in VRAM.
+; Both source and destination must be aligned by 16 bytes.
+; Length must likewise be a multiple of 16 bytes.
+; Intended to be called during vqueue routines.
+; Uses CGB features and does not work on DMG.
+; Lives in ROM0.
+;
+; Input:
+; - `hl`: Destination
+; - `bc`: Source
+; - `d`: Byte count / 16
+;
+; Destroys: `a`, `e`
+MemcpyVDMA::
+    ; We may not have enough time to complete the transfer before the end of VBlank.
+    ; In that case, we must either wait for the next VBlank or split the transfer into
+    ; two parts.
+
+    ; Check if we're guaranteed to finish the transfer during this VBlank.
+    ldh a, [rLY]
+    cp a, 153 - 9 ; Last scanline guaranteed to give enough time for a single transfer
+    jr c, MemcpyWholeVDMA
+
+    ; 
+    sub a, 153 - 1
+    jr nc, .secondPart
+    ld e, a
+    xor a
+    :
+        add a, 14 ; VRAM DMA transfer rate per scanline, rounded down
+
+        inc e
+        jr nz, :-
+    ;
+    
+    cp a, d
+    jr nc, MemcpyWholeVDMA
+
+    ld e, d
+    ld d, a
+    call MemcpyWholeVDMA
+
+    ld a, e
+    sub a, d
+    ld d, a
+
+    .secondPart
+
+    :
+        ldh a, [rLY]
+        
+        cp a, 153 - 3
+        jr nc, :-
+
+        cp a, 140
+        jr c, :-
+    ;
+
+    jr MemcpyWholeVDMA
+
+    ret
+;
+
+
+
+; Copies data into VRAM using a DMA transfer.
+; Destination must be in VRAM, which must not be locked during the transfer.
+; Both source and destination must be aligned by 16 bytes.
+; Length must likewise be a multiple of 16 bytes.
+; Uses CGB features and does not work on DMG.
+;
+; Do not use directly during vqueue routines. This function expects VRAM
+; to not be locked for the duration of the transfer, and does not support
+; pausing the transfer between VBlank periods, which is required by the
+; vqueue system. For vqueue routines, prefer to use `MemcpyVDMA`, which
+; automatically breaks up transfers that would outlast the current VBlank
+; period.
+;
+; Lives in ROM0.
+;
+; Input:
+; - `hl`: Destination
+; - `bc`: Source
+; - `d`: Byte count / 16
+;
+; Destroys: `a`, `e`
+MemcpyWholeVDMA::
+    ld a, b
+    ldh [rHDMA1], a
+    ld a, c
+    ldh [rHDMA2], a
+    ld a, h
+    ldh [rHDMA3], a
+    ld a, l
+    ldh [rHDMA4], a
+
+    ld a, d
+    dec a
+    ldh [rHDMA5], a
+
+    ret
+;
+
+
+
 ; Sets a number of bytes at a location to a single value.  
 ; Lives in ROM0.
 ;

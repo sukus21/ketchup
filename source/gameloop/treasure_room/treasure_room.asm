@@ -9,6 +9,9 @@ INCLUDE "macro/memcpy.inc"
 SECTION "GAMELOOP TREASURE ROOM", ROM0
 
 GameloopTreasureRoom::
+    ld b, KEY1F_DBLSPEED | KEY1F_PREPARE
+    call SetCPUSpeed
+
     xor a, a
     ldh [hTreasureRoomVars.animTime], a
     ldh [hTreasureRoomVars.animTime + 1], a
@@ -42,6 +45,9 @@ GameloopTreasureRoom::
     ; Do initial VBlank
     call WaitVBlank
     call GameloopBattleVBlank
+
+    ld b, KEY1F_PREPARE
+    call SetCPUSpeed
 
     .loop:
         ldh a, [hTreasureRoomVars.state]

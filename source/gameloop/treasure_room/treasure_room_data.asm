@@ -11,8 +11,8 @@ GameloopTreasureRoomInitTransfer::
     xor a
     ldh [rVBK], a
 
-    memcpy_label BgTileSet, _VRAM9000
-    memcpy_label ObjTileSet, _VRAM8000
+    memcpy_vdma_label BgTileSet, _VRAM9000
+    memcpy_vdma_label ObjTileSet, _VRAM8000
 
     ld hl, BgPalettes
     xor a, a
@@ -223,6 +223,8 @@ BgPalettes:
     color_t 20, 7, 2
     color_t 20, 7, 2
 .end
+
+    ds ALIGN[4]
 
 BgTileSet:
     ; Empty tile

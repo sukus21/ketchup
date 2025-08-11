@@ -14,6 +14,9 @@ DEF HARDCODED_INVENTORY EQU 1
 SECTION "EQUIPMENT SCREEN", ROM0
 
 GameloopEquipmentScreen::
+    ld b, KEY1F_DBLSPEED | KEY1F_PREPARE
+    call SetCPUSpeed
+
     IF HARDCODED_INVENTORY
         ld hl, wEquipmentScreenVars
         xor a
@@ -63,6 +66,9 @@ GameloopEquipmentScreen::
     ; Do initial VBlank
     call WaitVBlank
     call GameloopBattleVBlank
+
+    ld b, KEY1F_PREPARE
+    call SetCPUSpeed
 
     .loop:
         call ReadInput
