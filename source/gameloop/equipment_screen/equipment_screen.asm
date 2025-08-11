@@ -11,12 +11,9 @@ INCLUDE "macro/memcpy.inc"
 
 DEF HARDCODED_INVENTORY EQU 1
 
-SECTION "EQUIPMENT SCREEN", ROMX
+SECTION "EQUIPMENT SCREEN", ROM0
 
 GameloopEquipmentScreen::
-    ld a, BANK(wGameStatePlayerEquipment)
-    ldh [rSVBK], a
-
     IF HARDCODED_INVENTORY
         ld hl, wEquipmentScreenVars
         xor a
@@ -27,11 +24,15 @@ GameloopEquipmentScreen::
     ELSE
         ld hl, wEquipmentScreenVars
         ld de, wGameStatePlayerEquipment
-        REPT 9
+        ld c, 9
+        :
             ld a, [de]
             ld [hl+], a
             inc e
-        ENDR
+
+            dec c
+            jr nz, :-
+        ;
 
         FOR I, 3
             ldh a, [hEquipmentScreenVars.offers + I]
@@ -53,36 +54,53 @@ GameloopEquipmentScreen::
 
     ld a, [wEquipmentScreenVars.slotShuffle + 0]
     ld b, a
-    farcall_x EquipableDescSetItem
+    call EquipableDescSetItem
 
     vqueue_enqueue GameloopEquipmentScreenInitTransfer
     vqueue_enqueue LoadEquipables
-    farcall_x GameloopLoading
+    call GameloopLoading
 
     ; Do initial VBlank
     call WaitVBlank
-    farcall_x GameloopBattleVBlank
+    call GameloopBattleVBlank
 
     .loop:
         call ReadInput
         call AcceptControls
 
-        ld h, HIGH(wOAM)
-        FOR I, 9
-            ld a, [wEquipmentScreenVars.slotShuffle + I]
+        ld hl, wEquipmentScreenVars.slotShuffle
+        ld b, 5
+        ld de, (44 << 8) + 44
+        .inventorySpriteLoop
+            ld a, [hl+]
             ld c, a
 
             add a, a
             add a, a
             add a, 64
 
-            ld b, 5
-            ld de, ((I / 3) * 24 + 44) << 8 | ((I % 3) * 24 + 44)
+            push hl
+            ld h, HIGH(wOAM)
             call DrawEquipableIcon
-        ENDR
+            pop hl
 
-        FOR I, 3
-            ld a, [wEquipmentScreenVars.slotShuffle + I + 9]
+            ld a, e
+            add a, 24
+            ld e, a
+            cp a, 44 + 24 * 3
+            jr nz, .inventorySpriteLoop
+
+            ld e, 44
+            ld a, d
+            add a, 24
+            ld d, a
+            cp a, 44 + 24 * 3
+            jr nz, .inventorySpriteLoop
+        ;
+
+        ld de, (44 << 8) | 132
+        .offerSpriteLoop
+            ld a, [hl+]
             ld c, a
 
             add a, a
@@ -91,10 +109,19 @@ GameloopEquipmentScreen::
 
             ld b, 5
             
-            ld de, (I * 24 + 44) << 8 | 132
+            push hl
+            ld h, HIGH(wOAM)
             call DrawEquipableIcon
-        ENDR
+            pop hl
 
+            ld a, d
+            add a, 24
+            ld d, a
+            cp a, 44 + 24 * 3
+            jr nz, .offerSpriteLoop
+        ;
+
+        ld h, HIGH(wOAM)
         ld de, (43 + 2 * 24) << 8 | 16
         ld c, 2
         :
@@ -108,12 +135,12 @@ GameloopEquipmentScreen::
 
             cp a, 43
             jr nc, :-
-        :
+        ;
 
         ld h, high(wOAM)
         call SpriteFinish
 
-        farcall_x EquipableDescRenderStep
+        call EquipableDescRenderStep
 
         ; Wait for Vblank
         .halting
@@ -150,7 +177,7 @@ GameloopEquipmentScreen::
 
             jr :++
         :
-            farcall_x EquipableDescUpload
+            call EquipableDescUpload
         :
 
         call DisplayHud
@@ -167,13 +194,17 @@ LoadEquipables:
 
     ld bc, _VRAM8000 + 16 * 64
     ld hl, wEquipmentScreenVars
-    REPT 12
+    .loop
         ld a, [hl+]
         ld e, a
         push hl
-        farcall_x LoadEquipableIconTiles
+        farcall LoadEquipableIconTiles
         pop hl
-    ENDR
+
+        ld a, l
+        cp a, LOW(wEquipmentScreenVars + 12)
+        jr nz, .loop
+    ;
 
     ret
 ;
@@ -282,7 +313,7 @@ AcceptControls:
 
     bit PADB_SELECT, c
     jr z, :+
-        farcall_x EquipableDescFlipPage
+        call EquipableDescFlipPage
     :
 
     ret
@@ -470,14 +501,12 @@ ChangeDesc:
     ld a, [bc]
 
     ld b, a
-    farcall_x EquipableDescSetItem
+    call EquipableDescSetItem
 
     pop af
     pop bc
     ret
 ;
-
-SECTION "EQUIPMENT SCREEN INTERRUPTS", ROM0, ALIGN[8]
 
 EquipmentScreenEndHud:
     push af

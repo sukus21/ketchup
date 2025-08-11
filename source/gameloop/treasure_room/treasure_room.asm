@@ -6,52 +6,7 @@ INCLUDE "gamestate/gamestate.inc"
 INCLUDE "macro/color.inc"
 INCLUDE "macro/memcpy.inc"
 
-SECTION "TREASURE ROOM", ROMX, ALIGN[8]
-
-ChestLockSpriteInfo:
-    FOR I, 20
-        db 144 - 56 - I * 3 / 2 - 2
-        db ((I + 4) * I) / 32
-    ENDR
-.end
-
-ChestOpenScanlineOffsets:
-    FOR CHEST_OPENNESS, 20
-        .op{d:CHEST_OPENNESS}:
-
-        DEF CHEST_OPENNESS += CHEST_OPENNESS / 2
-        
-        DEF CHEST_OPENNESS_EARLY = 2 * CHEST_OPENNESS / 3
-
-        FOR I, 19 - CHEST_OPENNESS_EARLY
-            db 64 - I
-        ENDR
-
-        FOR I, 19 - (CHEST_OPENNESS - CHEST_OPENNESS_EARLY), 0, -1
-            DEF T = (I * 16) / (20 - CHEST_OPENNESS / 2)
-            DEF T *= T
-            DEF V = (CHEST_OPENNESS / 2) * T
-            db CHEST_OPENNESS - 20 - (V / 256)
-        ENDR
-
-        db CHEST_OPENNESS - 19
-
-        IF CHEST_OPENNESS > 10
-            ; Inside of lid
-            FOR I, CHEST_OPENNESS - 10
-                DEF T = (I * 256) / (CHEST_OPENNESS - 10)
-                DEF V = -(20 - CHEST_OPENNESS) * (256 - T)
-                db (V + 128) / 256
-            ENDR
-
-            ds 10, 0
-        ELSE
-            ds CHEST_OPENNESS, 0
-        ENDC
-
-        ds 1, 0
-    ENDR
-.end
+SECTION "GAMELOOP TREASURE ROOM", ROM0
 
 GameloopTreasureRoom::
     xor a, a
@@ -59,6 +14,9 @@ GameloopTreasureRoom::
     ldh [hTreasureRoomVars.animTime + 1], a
     ldh [hTreasureRoomVars.state], a
     ld [wTreasureRoomVars.currBuffer], a
+
+    ld a, BANK(ChestOpenScanlineOffsets)
+    ld [rROMB0], a
 
     ld hl, wTreasureRoomVars.scanlineOffsetBuffer
     ld bc, ChestOpenScanlineOffsets.op0
@@ -79,11 +37,11 @@ GameloopTreasureRoom::
     call OamDmaInit
 
     vqueue_enqueue GameloopTreasureRoomInitTransfer
-    farcall_x GameloopLoading
+    call GameloopLoading
 
     ; Do initial VBlank
     call WaitVBlank
-    farcall_x GameloopBattleVBlank
+    call GameloopBattleVBlank
 
     .loop:
         ldh a, [hTreasureRoomVars.state]
@@ -117,10 +75,13 @@ GameloopTreasureRoom::
                 ldh [hTreasureRoomVars.animTime], a
                 jr .stateEnd
             :
-            farcall_x GameloopEquipmentScreen
+            farcall GameloopEquipmentScreen
         :
         
         .stateEnd:
+
+        ld a, BANK(ChestOpenScanlineOffsets)
+        ld [rROMB0], a
 
         ld b, 4
         ld h, HIGH(wOAM)
@@ -175,6 +136,9 @@ GameloopTreasureRoom::
 ;
 
 AdvanceChestAnim:
+    ld a, BANK(ChestOpenScanlineOffsets)
+    ld [rROMB0], a
+    
     ldh a, [hTreasureRoomVars.animTime]
     add a, $67
     ;add a, $27
@@ -232,8 +196,6 @@ AdvanceChestAnim:
     ld de, 40
     jp Memcpy ; Tail call
 ;
-
-SECTION "TREASURE ROOM INTERRUPTS", ROM0
 
 TreasureRoomHudEnd:
     push af
@@ -303,6 +265,53 @@ TreasureRoomHBlank:
     pop af
     reti
 ;
+
+SECTION "TREASURE ROOM ANIM DATA", ROMX, ALIGN[8]
+
+ChestLockSpriteInfo:
+    FOR I, 20
+        db 144 - 56 - I * 3 / 2 - 2
+        db ((I + 4) * I) / 32
+    ENDR
+.end
+
+ChestOpenScanlineOffsets:
+    FOR CHEST_OPENNESS, 20
+        .op{d:CHEST_OPENNESS}:
+
+        DEF CHEST_OPENNESS += CHEST_OPENNESS / 2
+        
+        DEF CHEST_OPENNESS_EARLY = 2 * CHEST_OPENNESS / 3
+
+        FOR I, 19 - CHEST_OPENNESS_EARLY
+            db 64 - I
+        ENDR
+
+        FOR I, 19 - (CHEST_OPENNESS - CHEST_OPENNESS_EARLY), 0, -1
+            DEF T = (I * 16) / (20 - CHEST_OPENNESS / 2)
+            DEF T *= T
+            DEF V = (CHEST_OPENNESS / 2) * T
+            db CHEST_OPENNESS - 20 - (V / 256)
+        ENDR
+
+        db CHEST_OPENNESS - 19
+
+        IF CHEST_OPENNESS > 10
+            ; Inside of lid
+            FOR I, CHEST_OPENNESS - 10
+                DEF T = (I * 256) / (CHEST_OPENNESS - 10)
+                DEF V = -(20 - CHEST_OPENNESS) * (256 - T)
+                db (V + 128) / 256
+            ENDR
+
+            ds 10, 0
+        ELSE
+            ds CHEST_OPENNESS, 0
+        ENDC
+
+        ds 1, 0
+    ENDR
+.end
 
 SECTION UNION "GAMELOOP VARS", WRAM0, ALIGN[8]
 wTreasureRoomVars:

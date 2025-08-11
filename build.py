@@ -150,7 +150,7 @@ def build():
     # Link objects with rgblink
     print("\nRGBLINK step...")
     output = os.path.join("build", "build")
-    args = ["rgblink", "-p", "255", "-m", output+".map", "-n", output+".sym", "-o", output+".gb"] + objects
+    args = ["rgblink", "-p", "255", "-w", "-m", output+".map", "-n", output+".sym", "-o", output+".gb"] + objects
     print(" ".join(escapeCli(args)))
     result = cmd.run(args, stdout=sys.stdout, stderr=sys.stderr)
     if result.returncode != 0:

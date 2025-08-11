@@ -53,36 +53,7 @@ DEF TEXTBOX_STATEF_UPLOAD_READY EQU 4
 DEF TEXTBOX_STATEF_CLEAR_TILES EQU 8
 DEF TEXTBOX_STATEF_PAGE_END EQU 16
 
-SECTION "EQUIPABLE DESCRIPTIONS", ROMX, ALIGN[8]
-
-; A table of pointers to the descriptions of each item.
-; Keyed by equipable type ID. Each entry is 2 bytes long.
-;
-; Each description is encoded as a series of strings, each
-; containing one line of text. Each string are terminated by
-; a `0` followed by a one-byte footer. This footer can have
-; one of three values:
-; - `0` indicates the end of a description.
-; - `1` indicates that the following line belongs to the next page.
-; - `2` indicates a line feed.
-EquipableDescriptionsTable:
-    dw EquipableDescFirstAidKit
-    dw EquipableDescSpellBoy
-    dw EquipableDescButterKnife
-    dw EquipableDescDuckeeIdol
-    dw EquipableDescSurstromming
-    dw EquipableDescGoldBar
-    dw EquipableDescPantoglove
-    dw EquipableDescMagnet
-    dw EquipableDescSupersoaker
-    dw EquipableDescBoomerang
-    dw EquipableDescAlarmClock
-    dw EquipableDescLegalDocument
-
-    REPT $80 - (EquipableDescriptionsTable - @) / 2
-        dw EquipableDescDefault
-    ENDR
-.end
+SECTION "EQUIPABLE DESCRIPTIONS RENDERING", ROM0
 
 ; Reset the text box and have it describe the specified equipable item.
 ;
@@ -92,6 +63,10 @@ EquipableDescriptionsTable:
 ; Saves: none
 ; Side effects: Switches WRAM banks
 EquipableDescSetItem::
+    ; Set ROMX bank
+    ld a, BANK(EquipableDescriptionsTable)
+    ld [rROMB0], a
+
     ; Store which item is being described
     ld hl, wDescribedItem
     ld a, b
@@ -127,6 +102,10 @@ EquipableDescSetItem::
 ; Saves: none
 ; Side effects: Switches WRAM banks
 EquipableDescFlipPage::
+    ; Set ROMX bank
+    ld a, BANK(EquipableDescriptionsTable)
+    ld [rROMB0], a
+    
     ; Load state flags into `b`
     ld hl, wStateFlags
     ld a, [hl+] ; Reads from `wStateFlags`
@@ -228,10 +207,6 @@ ResetRendering:
     ld [hl+], a ; Writes to `wFontDestChar + 1`
     ld [hl], 0 ; Writes to `wFontDestPixel`
 
-    ; Clear the buffer
-    ld a, BANK(wRenderBuffer)
-    ldh [rSVBK], a
-
     ld hl, wRenderBuffer
     ld bc, $0010
     call MemsetChunked
@@ -243,11 +218,11 @@ ResetRendering:
 ; Should be called once per frame.
 ;
 ; Saves: none
-; Side effects: Switches WRAM banks
+; Side effects: Switches ROMX banks
 EquipableDescRenderStep::
-    ; Switch to the right WRAM bank
-    ld a, BANK(wRenderBuffer)
-    ldh [rSVBK], a
+    ; Set ROMX bank
+    ld a, BANK(EquipableDescriptionsTable)
+    ld [rROMB0], a
 
     ; Load state flags into `b`
     ld hl, wStateFlags
@@ -386,9 +361,6 @@ EquipableDescUpload::
     xor a, a
     ldh [rVBK], a
 
-    ld a, BANK(wRenderBuffer)
-    ldh [rSVBK], a
-
     ; Load destination into `de`
     ld a, [wVramDest+1]
     ld d, a
@@ -431,10 +403,6 @@ EquipableDescUpload::
     ; Store state flags in `b`
     ld b, a
 
-    ; Switch to the right banks
-    ld a, BANK(wRenderBuffer)
-    ldh [rSVBK], a
-
     xor a, a
     ldh [rVBK], a
 
@@ -465,6 +433,38 @@ EquipableDescUpload::
 
     ret
 ;
+
+
+SECTION "EQUIPABLE DESCRIPTIONS DATA", ROMX, ALIGN[8]
+
+; A table of pointers to the descriptions of each item.
+; Keyed by equipable type ID. Each entry is 2 bytes long.
+;
+; Each description is encoded as a series of strings, each
+; containing one line of text. Each string are terminated by
+; a `0` followed by a one-byte footer. This footer can have
+; one of three values:
+; - `0` indicates the end of a description.
+; - `1` indicates that the following line belongs to the next page.
+; - `2` indicates a line feed.
+EquipableDescriptionsTable:
+    dw EquipableDescFirstAidKit
+    dw EquipableDescSpellBoy
+    dw EquipableDescButterKnife
+    dw EquipableDescDuckeeIdol
+    dw EquipableDescSurstromming
+    dw EquipableDescGoldBar
+    dw EquipableDescPantoglove
+    dw EquipableDescMagnet
+    dw EquipableDescSupersoaker
+    dw EquipableDescBoomerang
+    dw EquipableDescAlarmClock
+    dw EquipableDescLegalDocument
+
+    REPT $80 - (EquipableDescriptionsTable - @) / 2
+        dw EquipableDescDefault
+    ENDR
+.end
 
 SETCHARMAP TEST_FONT_CHARMAP
 
