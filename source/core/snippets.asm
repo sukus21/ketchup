@@ -116,7 +116,7 @@ MemcpyShort::
 ; - `bc`: Source
 ; - `d`: Byte count / 16
 ;
-; Destroys: `a`, `e`
+; Destroys: `a`, `de`
 MemcpyVDMA::
     ; We may not have enough time to complete the transfer before the end of VBlank.
     ; In that case, we must either wait for the next VBlank or split the transfer into
@@ -125,33 +125,37 @@ MemcpyVDMA::
     ; Check if we're guaranteed to finish the transfer during this VBlank.
     ldh a, [rLY]
     cp a, 153 - 9 ; Last scanline guaranteed to give enough time for a single transfer
-    jr c, MemcpyWholeVDMA
+    jp c, MemcpyWholeVDMA ; Tail call
 
-    ; 
+    ; Calculate how many tiles we can transfer before this VBlank ends
     sub a, 153 - 1
-    jr nc, .secondPart
+    jr nc, .secondPart ; Skip first transfer if we don't have time to transfer anything
     ld e, a
     xor a
     :
-        add a, 14 ; VRAM DMA transfer rate per scanline, rounded down
+        add a, 14 ; VRAM DMA transfer rate in tiles per scanline, rounded down
 
         inc e
         jr nz, :-
     ;
     
+    ; If we're able to perform the entire transfer right now, then do that
     cp a, d
-    jr nc, MemcpyWholeVDMA
+    jp nc, MemcpyWholeVDMA ; Tail call
 
+    ; Transfer as much as we can right now
     ld e, d
     ld d, a
     call MemcpyWholeVDMA
 
+    ; Calculate remaining number of tiles
     ld a, e
     sub a, d
     ld d, a
 
     .secondPart
 
+    ; Wait for the next VBlank
     :
         ldh a, [rLY]
         
@@ -162,9 +166,8 @@ MemcpyVDMA::
         jr c, :-
     ;
 
-    jr MemcpyWholeVDMA
-
-    ret
+    ; Complete the transfer
+    jp MemcpyWholeVDMA ; Tail call
 ;
 
 
